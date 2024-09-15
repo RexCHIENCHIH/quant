@@ -1,0 +1,38 @@
+//KD指標計算
+Len = input.int(9, maxval=1000 , minval=1 , step=1 , title="快線K", group="KD參數設定")
+DLen = input.int(3, maxval=1000 , minval=1 , step=1 , title="慢線D", group="KD參數設定")
+kdUpper = input.int(80, maxval=100 , minval=0 , step=1 , title="超買區", group="KD參數設定")
+kdLower = input.int(20, maxval=100 , minval=0 , step=1 , title="超賣區", group="KD參數設定")
+Fast = ta.stoch(close, high, low, Len)
+K = ta.sma(Fast, DLen)
+D = ta.sma(K, DLen)
+
+//進場條件
+MaxUseBars = 1+math.max(Len,DLen,1)//每個策略要重新設定
+LongEntry = bar_index>MaxUseBars and MP<=0 and ta.crossover(K,D) and K<kdLower and D<kdLower
+ShortEntry = bar_index>MaxUseBars and MP>=0 and ta.crossunder(K,D) and K>kdUpper and D>kdUpper
+
+//多單委託
+if LongEntry
+    strategy.entry("LE", strategy.long) //多單進場
+
+//空單委託
+if ShortEntry
+    strategy.entry("SE", strategy.short) //空單進場
+
+//上底色，持有多單底色綠色，持有空單底色紅色
+colorBG = strategy.opentrades.size(strategy.opentrades-1)>0 ? color.new(color.green,80) :
+ strategy.opentrades.size(strategy.opentrades-1)<0 ? color.new(color.red,80) :
+ color.new(color.gray,100)
+bgcolor(colorBG, force_overlay=true)
+
+//繪圖
+plot(K, color = color.blue, title = "K")
+plot(D, color = color.red, title = "D")
+kdUpperBand = hline(kdUpper, "KD上界", color=color.gray)
+kdLowerBand = hline(kdLower, "KD下界", color=color.gray)
+kd100Band = hline(100, "KD_100", color=color.gray,linestyle=hline.style_solid)
+kd50Band = hline(50, color = color.black, linestyle = hline.style_dashed)
+kd0Band = hline(0, "KD_0", color=color.gray,linestyle=hline.style_solid)
+fill(kdUpperBand, kd100Band, color=color.new(color.red,90), title="KD上界")
+fill(kd0Band, kdLowerBand, color=color.new(color.green,90), title="KD下界")

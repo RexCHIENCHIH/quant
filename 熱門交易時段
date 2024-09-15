@@ -1,0 +1,39 @@
+熱門交易時段模組：只在特定時間進行交易，或希望避開某些熱門時段，這個濾網模組可以限制交易時間。
+
+// input.session：用於設定交易時間區間的輸入參數，允許特定的交易時間範圍。
+TimeRange = input.session("0900-2300", "時間限制") 
+
+///////////////////////////////////////////////////////////////////////////////////////
+//timeframe.period：用來取得當前圖表的時間框架
+//如果你的圖表是設置在 1 分鐘、5 分鐘、1 小時或 1 天，timeframe.period 就會返回對應的時間框架。
+//表時間框架設置為 1 小時，Timeframe: 60
+//時間框架設置為 1 天，Timeframe: 1D
+///////////////////////////////////////////////////////////////////////////////////////
+
+t = time(timeframe.period, TimeRange)
+bgcolor(time == t ? color.new(color.orange,80) : na)
+var longFillter = false
+if time==t
+    longFillter := true
+else
+    longFillter := false
+
+
+//最新一筆的未平倉進場價格
+EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1)
+
+// 出場參數設定
+SL = input.float(5.0, "停損百分比")  // 停損百分比
+TP = input.float(5.0, "止盈百分比")  // 止盈百分比
+
+// 計算多頭的止損和兩個停利價格
+Long_SL_Price = EntryPrice * (1 - SL * 0.01)  // 計算多頭的止損價格
+Long_PT_Price = EntryPrice * (1 + TP * 0.01)  // 計算第一目標停利價
+
+// 進場條件
+if longCondition and longFillter 
+strategy.entry("LE", strategy.long)
+//出場條件
+strategy.exit("LX", limit= Long_PT_Price, stop= Long_SL_Price, comment_profit="PT", comment_loss="SL")
+
+

@@ -1,0 +1,86 @@
+資金相關的函數：
+
+初始資金 (initial_capital)：策略運行時的本金。
+
+已實現損益 (realized_profit)：已平倉交易的損益。
+
+未實現損益 (open_profit)：未平倉頭寸的浮動損益。
+
+=================================================================
+
+績效相關的函數：
+
+strategy.max_drawdown：計算整個交易期間的最大回撤（Max Drawdown，MD）
+
+strategy.max_drawdown_percent：最大回撤的百分比。
+
+strategy.avg_loss_trades：每筆虧損交易的平均損失金額。
+
+strategy.avg_win_trades：每筆盈利交易的平均獲利金額。
+
+=================================================================
+
+平倉相關的函數
+
+strategy.closedtrades.entry_price：已平倉交易的進場價格。
+
+strategy.closedtrades.exit_price：已平倉交易的出場價格。
+
+strategy.closedtrades.bar_index_entry：已平倉進場的K棒編號。
+
+strategy.closedtrades.bar_index_exit：已平倉出場的K棒編號。
+
+strategy.closedtrades.profit：已平倉交易的損益值，虧損為負值。
+
+strategy.closedtrades.size：已平倉交易的頭寸數量，正值代表多單，負值代表空單。
+
+=================================================================
+
+未平倉相關的函數：
+
+strategy.opentrades.profit：未平倉交易的損益，虧損為負值。
+
+strategy.opentrades.size：未平倉交易的數量，正值代表做多，負值代表做空。
+
+場上持有兩張多單：
+
+第一筆持有 1 張多單（strategy.opentrades.size(0)）。// 1-1=0
+第二筆持有 2 張多單（strategy.opentrades.size(1)）。// 2-1=1
+
+查詢最新一筆未平倉交易：
+strategy.opentrades.size(strategy.opentrades - 1)，即 strategy.opentrades.size(1)。
+
+> 0：判斷是否有一個多頭部位，如果是，MP 的值將被設置為 1。
+< 0：判斷是否有一個空頭部位，如果是，MP 的值將被設置為 -1。
+=0：沒有未平倉的交易（也就是沒有部位），則 MP 的值設置為 0。
+
+strategy.opentrades.bar_index_entry：未平倉交易的進場K棒編號。
+
+strategy.opentrades.entry_price：未平倉交易的進場價格，用來返回指定交易的進場價格。
+
+EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1)：
+取得最新一筆未平倉的交易的進場價格
+
+=================================================================
+
+部位相關的函數：
+strategy.position_avg_price：當前部位的平均進場價格。如果沒有部位，則返回空值。
+strategy.position_size：當前部位的數量，正值表示多單，負值表示空單。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

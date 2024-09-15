@@ -1,0 +1,11 @@
+// 取得指定時間框架（例如日線）的歷史數據
+// syminfo.tickerid：當前商品的代號
+
+//前一日的最高價（PDH）
+PDH = request.security(syminfo.tickerid,"1D",high)
+
+前一日的收盤價（PDC）
+PDC = request.security(syminfo.tickerid,"1D",close)
+
+前一日的最低價（PDL）
+PDL = request.security(syminfo.tickerid,"1D",low)

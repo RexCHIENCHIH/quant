@@ -18,6 +18,11 @@ float a = na //正確
 
 switch結構：搭配=>
 
+自定義函數：
+
+局部程序塊在操作符  =>  的後面
+
+
 =========================================================
 
 input函數：
@@ -30,7 +35,13 @@ input函數：
 
 4. options：前面板只能選定這些東西，例如[1,4,9]
 
+=========================================================
 
+plotshape：
+
+plotshape(buy_signal,size = size.small,color=color.green,style=shape.triangleup,location = location.belowbar)
+
+plotshape(sell_signal,size = size.small,color=color.red,style=shape.triangledown,location = location.belowbar)
 
 
 

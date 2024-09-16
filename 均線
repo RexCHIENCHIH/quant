@@ -1,0 +1,42 @@
+//@version=5
+strategy(title="金/死叉、多空頭排列",overlay=true)
+
+//均線指標計算
+Small_Length = input.int(25,  maxval=1000 , minval=1 , step=1 , title="短均線參數")
+Mid_Length = input.int(50,  maxval=1000 , minval=1 , step=1 , title="中均線參數")
+Big_Length = input.int(100,  maxval=1000 , minval=1 , step=1 , title="長均線參數")
+Source = input.source(close,title="取樣價格")
+type = input.string("金叉死叉", options = ["金叉死叉","多頭/空頭排列"])
+
+L1 = ta.sma(close, Small_Length)
+L2 = ta.sma(close, Mid_Length)
+L3 = ta.sma(close, Big_Length)
+
+var LongEntry = false
+var ShortEntry = false
+
+if type=="金叉死叉"
+    LongEntry := ta.crossover(L1,L2)
+    ShortEntry := ta.crossunder(L1,L2)
+else if type=="多頭/空頭排列"
+    LongEntry := L1>L2 and L2>L3
+    ShortEntry := L1<L2 and L2<L3
+
+//多單委託
+if LongEntry
+    strategy.entry("LE", strategy.long) //多單進場
+
+//空單委託
+if ShortEntry
+    strategy.entry("SE", strategy.short) //空單進場
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+         strategy.position_size < 0 ? color.new(color.red, 80) :
+         color.new(color.gray, 100)
+bgcolor(colorBG, force_overlay=true)
+
+//繪圖
+plot(L1, color=color.blue, title="短均線")
+plot(L2, color=color.purple, title="中均線")
+plot(L3, color=color.orange, title="長均線")

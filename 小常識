@@ -37,12 +37,6 @@ input函數：
 
 =========================================================
 
-plotshape：
-
-plotshape(buy_signal,size = size.small,color=color.green,style=shape.triangleup,location = location.belowbar)
-
-plotshape(sell_signal,size = size.small,color=color.red,style=shape.triangledown,location = location.belowbar)
-
 
 
 

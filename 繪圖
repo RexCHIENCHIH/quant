@@ -1,7 +1,7 @@
 
-//背景顏色，多頭綠色，空頭紅色，空手灰色
 //color = color.new(color.green,20) //數值為透明度
 
+//背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
            strategy.position_size < 0 ? color.new(color.red, 80) :
            color.new(color.gray, 100)

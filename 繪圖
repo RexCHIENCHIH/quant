@@ -1,0 +1,18 @@
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+//color = color.new(color.green,20) //數值為透明度
+
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+bgcolor(colorBG)
+
+==============================================================================
+
+plotshape：
+
+plotshape(buy_signal,size = size.small,color=color.green,style=shape.triangleup,location = location.belowbar)
+
+plotshape(sell_signal,size = size.small,color=color.red,style=shape.triangledown,location = location.belowbar)
+
+==============================================================================

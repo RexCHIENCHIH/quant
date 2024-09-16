@@ -1,0 +1,34 @@
+//@version=5
+strategy(title="OBV",overlay=false)
+
+//OBV指標計算
+Fast_Length = input.int(20, minval=1, title="短均長度", group="OBV參數設定")
+Slow_Length = input.int(50, minval=1, title="短均長度", group="OBV參數設定")
+OBV = ta.obv
+Fast_OBV = ta.ema(OBV,Fast_Length)
+Slow_OBV = ta.ema(OBV,Slow_Length)
+
+//進場條件
+LongEntry = ta.crossover(Fast_OBV,Slow_OBV)
+ShortEntry = ta.crossunder(Fast_OBV,Slow_OBV)
+
+//多單進場
+if LongEntry
+    strategy.entry("LE", strategy.long)
+
+//空單進場
+if ShortEntry
+    strategy.entry("SE", strategy.short) 
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//繪圖
+plot(OBV, color=color.gray, title="OBV")
+plot(Fast_OBV, color=color.red, title="Fast_OBV")
+plot(Slow_OBV, color=color.blue, title="Slow_OBV")

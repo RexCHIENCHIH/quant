@@ -8,27 +8,30 @@ Big_Length = input.int(100,  maxval=1000 , minval=1 , step=1 , title="長均線�
 Source = input.source(close,title="取樣價格")
 type = input.string("金叉死叉", options = ["金叉死叉","多頭/空頭排列"])
 
+//均線
 L1 = ta.sma(Source, Small_Length)
 L2 = ta.sma(Source, Mid_Length)
 L3 = ta.sma(Source, Big_Length)
 
+//進場條件
 var LongEntry = false
 var ShortEntry = false
 
 if type=="金叉死叉"
     LongEntry := ta.crossover(L1,L2)
     ShortEntry := ta.crossunder(L1,L2)
+
 else if type=="多頭/空頭排列"
     LongEntry := L1>L2 and L2>L3
     ShortEntry := L1<L2 and L2<L3
 
-//多單委託
+//多單進場
 if LongEntry
-    strategy.entry("LE", strategy.long) //多單進場
+    strategy.entry("LE", strategy.long)
 
-//空單委託
+//空單進場
 if ShortEntry
-    strategy.entry("SE", strategy.short) //空單進場
+    strategy.entry("SE", strategy.short)
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :

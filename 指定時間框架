@@ -1,5 +1,7 @@
 // 取得指定時間框架（例如日線）的歷史數據
 // syminfo.tickerid：當前商品的代號
+//request.security = (symbol = "EURGBP", timeframe = "1D",close)
+
 
 //前一日的最高價（PDH）
 PDH = request.security(syminfo.tickerid,"1D",high)

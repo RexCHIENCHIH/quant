@@ -7,6 +7,7 @@ mult = input.float(2.0, minval=0.1, maxval=10, title="標準差倍數", group="�
 Source = input.source(close,title="取樣價格")
 type = input.string("逆勢突破", options = ["逆勢突破","順勢突破"])
 
+//布林通道
 basis = ta.ema(Source,Length)
 dev = mult * ta.stdev(Source,Length)
 upper = basis + dev
@@ -25,16 +26,18 @@ else if type=="順勢突破"
 
 //多單進場
 if LongEntry
-    strategy.entry("LE", strategy.long) //多單進場
+    strategy.entry("LE", strategy.long) 
 
 //空單進場
 if ShortEntry
-    strategy.entry("SE", strategy.short) //空單進場
+    strategy.entry("SE", strategy.short) 
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
-         strategy.position_size < 0 ? color.new(color.red, 80) :
-         color.new(color.gray, 100)
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
 bgcolor(colorBG, force_overlay=true)
 
 //繪圖

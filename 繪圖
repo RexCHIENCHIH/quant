@@ -5,6 +5,8 @@
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
            strategy.position_size < 0 ? color.new(color.red, 80) :
            color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
 bgcolor(colorBG, force_overlay=true)
 
 ==============================================================================

@@ -36,8 +36,10 @@ if ShortExit
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
-         strategy.position_size < 0 ? color.new(color.red, 80) :
-         color.new(color.gray, 100)
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
 bgcolor(colorBG, force_overlay=true)
 
 //柱狀體顏色

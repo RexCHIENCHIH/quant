@@ -1,6 +1,6 @@
 資金相關的函數：
 
-初始資金 (initial_capital)：策略運行時的本金。
+初始資金 (initial_capital)：策略運行時的本金 / 初始資本金額
 
 已實現損益 (realized_profit)：已平倉交易的損益。
 

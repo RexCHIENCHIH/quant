@@ -1,5 +1,5 @@
 //@version=5
-strategy(title="RSI",overlay=false,pyramiding = 10)
+strategy(title="RSI",overlay=false)
 
 //參數設定
 RSI_Length = input.int(14, minval=1, maxval=1000, step=2, title="RSI長度", group="RSI參數設定")

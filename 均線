@@ -8,9 +8,9 @@ Big_Length = input.int(100,  maxval=1000 , minval=1 , step=1 , title="長均線�
 Source = input.source(close,title="取樣價格")
 type = input.string("金叉死叉", options = ["金叉死叉","多頭/空頭排列"])
 
-L1 = ta.sma(close, Small_Length)
-L2 = ta.sma(close, Mid_Length)
-L3 = ta.sma(close, Big_Length)
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Mid_Length)
+L3 = ta.sma(Source, Big_Length)
 
 var LongEntry = false
 var ShortEntry = false

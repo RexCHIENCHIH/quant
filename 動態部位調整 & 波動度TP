@@ -1,0 +1,70 @@
+
+1. 動態調整：根據市場狀況自動調整進場單位數。
+2. 波動性與風險：在市場波動性增加時，提高部位數量；反之則減少部位數量。
+
+//////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="動態部位調整",overlay=true, pyramiding=1)
+
+//參數設定
+Small_Length = input.int(50, "短均長度")
+Mid_Length = input.int(100, "中均長度")
+Big_Length = input.int(200, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+
+//計算短均線與長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Mid_Length)
+L3 = ta.sma(Source, Big_Length)
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+//動態部位調整
+var EntryQTY = 1.00
+if L2>L3
+    EntryQTY := 2
+else if L2<L3
+    EntryQTY := 1
+
+//進場
+if longCondition1
+    strategy.entry("LE0", strategy.long, qty=EntryQTY)
+
+//出場
+strategy.exit("LX",  profit=50000, loss=20000)
+
+
+plot(L1,"SmallMA",color.yellow)
+plot(L2,"MidMA",color.blue)
+plot(L3,"BigMA",color.orange)
+
+//////////////////////////////////////////////////////////////////////////
+
+//計算波動度
+lookback = 50 //該時區的50根K棒
+volitility = stdev(close,lookback) //當前波動性
+volitility_average = ema(volitility,lookback) //平均波動性
+
+//動態ATR乘數，波動性和波動性平均之比*4
+//用來調整止損和止盈的位置，突破之後的波動度比原本的波動度大了4倍，即假突破的概率更低。
+
+ATR_multiplier = 4 * (volitility / volitility_average)
+longTP = close + ATR_multiplier * atr(14)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

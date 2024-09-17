@@ -1,6 +1,47 @@
 
 1. 根據進場後的波動程度自動調整出場價格。
 2. 可以用標準差或K棒長度來衡量波動。
+3. 停損停利能隨著市場波動自動調整，適應不同的市場條件。
 
 //////////////////////////////////////////////////////////////////////////////////////
 
+//@version=5
+strategy(title="動態波動停損停利",overlay=true)
+
+//未平倉的進場價
+EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//參數設定
+Small_Length = input.int(20, "短均長度")
+Big_Length = input.int(50, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//計算短均線與長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//出場參數設定
+ATR_Length = input.int(20, "ATR長度") 
+Mult = input.float(2.00,"ATR倍數") 
+
+//ATR
+ATR = ta.atr(ATR_Length) 
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+//進場
+if longCondition1
+    strategy.entry("LE", strategy.long)
+
+//多頭停損停利
+LongTP = EntryPrice + (ATR * Mult*2)
+LongSL = EntryPrice - ( ATR * Mult)
+
+// 多頭停利損
+if (strategy.position_size > 0)
+    strategy.exit("TP/SL","LE",limit=LongTP,stop=LongSL,comment_profit="LongTP",comment_loss="LongSL")
+
+//繪圖
+plot(L1,"SmallMA",color.yellow)
+plot(L2,"BigMA",color.blue)

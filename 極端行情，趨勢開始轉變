@@ -1,0 +1,57 @@
+
+1. 在行情超漲或超跌之後，當價格進入反向走勢時進行出場。
+2. 當行情突破通道指標的上下邊界，表示行情處於極端狀態。
+3. 通道指標：標準差、ATR
+4. 震盪指：KD超買超賣區
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="極端行情，趨勢開始轉變",overlay=true)
+
+//未平倉的進場價
+EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//參數設定
+Small_Length = input.int(20, "短均長度")
+Big_Length = input.int(50, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//短均線、長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//出場參數
+Length = input.int(20,"布林通道長度")
+Mult = input.float(2.00,"標準差倍數")
+
+//布林通道
+Basis = ta.sma(Source,Length)
+Upper = Basis + Mult * ta.stdev(Source,Length)
+Lower = Basis - Mult * ta.stdev(Source,Length)
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+//進場
+if longCondition1
+    strategy.entry("LE", strategy.long)
+
+//出場
+if ta.crossunder(Source,Upper)
+    strategy.close("LE", "LX")
+
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//繪圖
+plot(L1,"SmallMA",color.yellow,force_overlay = true)
+plot(L2,"BigMA",color.blue,force_overlay = true)
+plot(Upper,"HB",color.gray)
+plot(Lower,"LB",color.gray)

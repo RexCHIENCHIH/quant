@@ -1,3 +1,10 @@
+
+1. 標準差是一個統計學概念，用於衡量價格的分散程度。可以作為價格穩定性的測量標準，也是衡量波動的指標。
+
+2. 和ATR相似，但標準差對價格較敏感；ATR因為是基於平均概念，所以較平緩
+
+/////////////////////////////////////////////////////////////////////////////////
+
 //@version=5
 strategy(title="標準差",overlay=false)
 
@@ -16,9 +23,12 @@ MA = ta.ema(Source, Stdev_Length)
 var LongEntry = false
 var ShortEntry = false
 
+// 當標準差超過一定倍數，且價格突破均線時進場，加入趨勢濾網，避免頻繁交易
 if type=="波動大"
     LongEntry := close>close[1]+dev*Mult and close>MA
     ShortEntry := close<close[1]-dev*Mult and close<MA
+
+// 當標準差突然大幅增加時進場，不考慮均線方向，適合捕捉短期大幅波動
 else if type=="波動瞬間放大"
     LongEntry := close>close[1]+dev*Big_Mult
     ShortEntry := close<close[1]-dev*Big_Mult

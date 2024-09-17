@@ -6,34 +6,90 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//@version=5
+strategy(title="萬用出場模組",overlay=true)
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//計算最近一次進場後，圖表上經歷了多少根K棒
+Bars_Since_Entry = bar_index - 
+ strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+
+//參數設定
+Small_Length = input.int(20, "短均長度")
+Big_Length = input.int(50, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//短均線、長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP1 = input.float(5.0, "第一目標止盈百分比") 
+TP2 = input.float(10.0, "第二目標止盈百分比") 
+
+//K棒數設定出場的時間條件，交易達到多少根K棒後將根據時間出場 
+Time_Out_Kbars = input.int(20, "時間出場K棒數")
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)  // 多頭止損價
+Long_TP1_Price = Entry_Price * (1 + TP1 * 0.01)  // TP1停利價
+Long_TP2_Price = Entry_Price * (1 + TP2 * 0.01)  // TP2停利價
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+//進場
+if longCondition1
+    strategy.entry("LE", strategy.long)
+
+//多單出場：止損 / 止盈 / 時間
+
+var OutPrice = 0.00
+
+//如果持有多單，且收盤價 >= TP2停利價(預設10%)
+//出場價格為：TP2停利價(預設10%) 和 Time_Out_Kbars(時間出場K棒數，預設為20根)/4 根的最低價(5根)，取其大值出場。
+if strategy.position_size > 0 and close >= Long_TP2_Price
+    OutPrice := math.max(Long_TP2_Price, ta.lowest(low, Time_Out_Kbars / 4))  
+    strategy.exit("LX_TP2", stop=OutPrice, comment="LX_止盈2")
+
+//如果持有多單，且收盤價 >= TP1停利價(預設5%)
+//出場價格為：TP1停利價(預設5%) 和 Time_Out_Kbars(時間出場K棒數，預設為20根)/2 根的最低價(10根)，取其大值出場。
+else if strategy.position_size > 0 and close >= Long_TP1_Price
+    OutPrice := math.max(Long_TP1_Price, ta.lowest(low, Time_Out_Kbars / 2))  
+    strategy.exit("LX_TP1", stop=OutPrice, comment="LX_止盈1")  
+
+//如果持有多單，且收盤價 < TP1停利價(預設5%) 且進場後經過的K棒數 <= Time_Out_Kbars(時間出場K棒數，預設為20根)
+//出場價格為：多頭止損價
+else if strategy.position_size > 0 and close < Long_TP1_Price and Bars_Since_Entry <= Time_Out_Kbars
+    OutPrice := Long_SL_Price  
+    strategy.exit("LX_SL", stop=OutPrice, comment="LX_止損")  
+
+//如果持有多單，且進場後經過的K棒數 > Time_Out_Kbars(時間出場K棒數，預設為20根)，且場上所有多單加總後為浮盈
+//出場價格為：多頭止損價 和 Time_Out_Kbars(時間出場K棒數，預設為20根)的最低價，取其大值出場
+else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and strategy.openprofit >= 0
+    OutPrice := math.max(Long_SL_Price, ta.lowest(low, Time_Out_Kbars))  
+    strategy.exit("LX_Time", stop=OutPrice, comment="LX_時間")  
+
+//如果持有多單，且進場後經過的K棒數 > Time_Out_Kbars(時間出場K棒數，預設為20根)，且場上所有多單加總後為浮虧
+//出場價格為：當根K棒最低價
+else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and
+     strategy.openprofit < 0
+    OutPrice := low  
+    strategy.exit("LX_-Time", stop=OutPrice, comment="LX_時間損")  
 
 
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
 
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//繪圖
+plot(L1,"SmallMA",color.yellow,force_overlay = true)
+plot(L2,"BigMA",color.blue,force_overlay = true)
+plot(OutPrice,"OutPrice",color.gray,style = plot.style_linebr)

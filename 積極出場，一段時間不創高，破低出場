@@ -1,0 +1,63 @@
+//@version=5
+strategy(title="積極出場，一段時間不創高，破低出場",overlay=false)
+
+//未平倉的進場價
+EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//參數設定
+Small_Length = input.int(20, "短均長度")
+Big_Length = input.int(50, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//短均線、長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//出場參數
+Length = input.int(20,"時間K棒數")
+TimePer = input.float(0.5,"多久的時間比例未創新高/創新低" ,maxval = 1.00)
+
+//儲存過去一段時間內最低價的K棒出現在過去第幾根K
+//回傳0，代表當下K棒為最低價
+//返回值若為負數，-1代表前一根為最低價，-3代表前三根為最低價
+//故*-1，轉為正數，1代表前一根為最低價，3代表前3根為最低價
+LB = ta.lowestbars(low, Length)*-1
+
+//儲存過去一段時間內最高價的K棒出現在過去第幾根K
+//回傳0，代表當下K棒為最高價
+//返回值若為負數，-1代表前一根為最高價，-3代表前三根為最高價
+//故*-1，轉為正數，1代表前一根為最高價，3代表前3根為最高價
+HB = ta.highestbars(high, Length)*-1
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+//進場
+if longCondition1
+    strategy.entry("LE", strategy.long)
+
+//HB的Length預設為20，即找出過去20根K棒的最高價出現在前面的第幾根K棒
+//假設返回值是12，代表過去20根K棒的最高價，出現在前面的第12根K棒
+// 3 > 10，不成立，因為過去20根K棒的最高價出現在前面的第3根，代表
+//12 > 10，代表前面這10根K棒都沒有創新高，因為最高價在前面的第12根K棒，因此出場
+
+//N根K棒沒有創高，就出場
+//這邊預設10根K棒未創高，就出場
+if HB>Length*TimePer
+    strategy.close("LE", "LX")
+
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//繪圖
+plot(L1,"SmallMA",color.yellow,force_overlay = true)
+plot(L2,"BigMA",color.blue,force_overlay = true)
+plot(HB,"HB",color.gray)
+//plot(LB,"LB",color.gray)
+hline(Length*TimePer)

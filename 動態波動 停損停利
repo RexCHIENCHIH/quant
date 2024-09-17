@@ -9,7 +9,7 @@
 strategy(title="動態波動停損停利",overlay=true)
 
 //未平倉的進場價
-EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 
 //參數設定
 Small_Length = input.int(20, "短均長度")

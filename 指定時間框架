@@ -28,8 +28,11 @@ Data2_close = request.security(Data2, Data2_timeframe, close)
 //計算期貨價格與現貨價格的差距，即價差。
 Spread = close - Data2_close
 
+濾網設定：使用價差閥值來過濾無效的價格波動，確保進出場信號的可靠性。
 
 ===============進階寫法，BTC、ETH，相除===============
+
+//兩個商品的價格規模差異很大，直接用減法計算價差不會得到顯著的結果，因此使用除法來計算價差。
 
 //input.symbol 用於選擇要比較的第二個商品
 Data2 = input.symbol("OKX:BTCUSDT","Data2商品") 

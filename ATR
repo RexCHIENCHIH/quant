@@ -1,3 +1,9 @@
+
+ATR（Average True Range）是一個衡量波動率的指標。
+它考慮了前一根K線的收盤價與當前K線的最高價和最低價之間的差距，包括跳空缺口。 
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 //@version=5
 strategy(title="ATR",overlay=false)
 
@@ -16,10 +22,12 @@ MA = ta.sma(Source, ATR_Length)
 var LongEntry = false
 var ShortEntry = false
 
+//ATR超過一定倍數，且價格突破均線時進場，•	加入趨勢濾網，避免頻繁交易 
 if type=="波動大"
     LongEntry := close>close[1]+ATR*Mult and close>MA
     ShortEntry := close<close[1]-ATR*Mult and close<MA
 
+//當ATR突然大幅增加時進場，•	適合短線交易
 else if type=="波動瞬間放大"
     LongEntry := close>close[1]+ATR*Big_Mult
     ShortEntry := close<close[1]-ATR*Big_Mult

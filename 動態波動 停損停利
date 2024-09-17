@@ -16,7 +16,7 @@ Small_Length = input.int(20, "短均長度")
 Big_Length = input.int(50, "長均長度")
 Source = input.source(close,title="取樣價格")
 
-//計算短均線與長均線
+//短均線、長均線
 L1 = ta.sma(Source, Small_Length)
 L2 = ta.sma(Source, Big_Length)
 
@@ -27,6 +27,10 @@ Mult = input.float(2.00,"ATR倍數")
 //ATR
 ATR = ta.atr(ATR_Length) 
 
+//多頭停損停利
+LongTP = EntryPrice + (ATR * Mult*2)
+LongSL = EntryPrice - ( ATR * Mult)
+
 //進場條件
 longCondition1 = ta.crossover(L1, L2)
 
@@ -34,13 +38,9 @@ longCondition1 = ta.crossover(L1, L2)
 if longCondition1
     strategy.entry("LE", strategy.long)
 
-//多頭停損停利
-LongTP = EntryPrice + (ATR * Mult*2)
-LongSL = EntryPrice - ( ATR * Mult)
-
 // 多頭停利損
 if (strategy.position_size > 0)
-    strategy.exit("TP/SL","LE",limit=LongTP,stop=LongSL,comment_profit="LongTP",comment_loss="LongSL")
+    strategy.exit("LX","LE",limit=LongTP,stop=LongSL,comment_profit="LongTP",comment_loss="LongSL")
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
@@ -53,3 +53,6 @@ bgcolor(colorBG, force_overlay=true)
 //繪圖
 plot(L1,"SmallMA",color.yellow)
 plot(L2,"BigMA",color.blue)
+plot(LongSL,"LongSL",color.gray)
+plot(LongTP,"LongTP",color.gray)
+

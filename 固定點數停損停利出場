@@ -1,0 +1,73 @@
+
+1. 在獲利或損失達到設定的點數時會自動平倉
+
+2. syminfo.mintick：用來表示當前交易標的物的最小價格跳動單位，表示在價格變動時，最小可以變動的單位。
+   (如果 syminfo.mintick 的值是 0.01，那麼這個標的的價格變化最小單位就是 0.01)
+
+3. BP = 1 / syminfo.mintick：計算每個整數點對應多少最小價格跳動單位。
+   
+   以ETHUSD 來說，通常 最小價格跳動單位是 0.01 美元，即 syminfo.mintick = 0.01。
+   BP = 1 / syminfo.mintick
+   BP = 1 / 0.01 = 100。
+   表示每個整數點相當於 100 個最小價格跳動單位
+
+   假設在 ETHUSD 的交易策略中設置：
+
+   SL為 50 點，
+   SL * BP = 50 * 100 = 5000，停損價格會觸發在價格下跌 5000 個最小價格跳動單位，即 50 美元。
+
+   PT為 100 點：
+   PT * BP = 100 * 100 = 10000，停利價格會觸發在價格上漲 10000 個最小價格跳動單位，即 100 美元。
+
+///////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="固定點數停損停利",overlay=true)
+
+//參數設定
+Small_Length = input.int(50, "短均長度")
+Big_Length = input.int(100, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//停損、停利點數
+SL = input.float(50, "停損點數")  
+PT = input.float(100, "停利點數") 
+
+//每個整數點有幾個跳動點(ticks)
+BP = 1 / syminfo.mintick
+
+
+//計算短均線與長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+
+//進場
+if longCondition1
+    strategy.entry("LE", strategy.long)
+
+//出場
+if strategy.position_size > 0
+    strategy.exit("LX", profit=PT * BP, loss=SL * BP, comment_profit="LX_PT", comment_loss="LX_SL")
+
+//繪圖
+plot(L1,"SmallMA",color.yellow)
+plot(L2,"BigMA",color.blue)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -28,8 +28,8 @@ Mult = input.float(2.00,"ATR倍數")
 ATR = ta.atr(ATR_Length) 
 
 //多頭停損停利
-LongTP = EntryPrice + (ATR * Mult*2)
-LongSL = EntryPrice - ( ATR * Mult)
+LongTP = Entry_Price + (ATR * Mult*2)
+LongSL = Entry_Price - ( ATR * Mult)
 
 //進場條件
 longCondition1 = ta.crossover(L1, L2)

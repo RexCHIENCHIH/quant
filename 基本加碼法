@@ -33,8 +33,6 @@ else if longCondition2
 if L1<L2 and L2<L3
     strategy.close_all("空頭排列全部出場")
 
-//strategy.exit("LX",  profit=50000, loss=20000)
-
 plot(L1,"SmallMA",color.yellow)
 plot(L2,"MidMA",color.blue)
 plot(L3,"BigMA",color.orange)

@@ -19,7 +19,7 @@
    PT為 100 點：
    PT * BP = 100 * 100 = 10000，停利價格會觸發在價格上漲 10000 個最小價格跳動單位，即 100 美元。
 
-///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //@version=5
 strategy(title="固定點數停損停利",overlay=true)
@@ -31,11 +31,10 @@ Source = input.source(close,title="取樣價格")
 
 //停損、停利點數
 SL = input.float(50, "停損點數")  
-PT = input.float(100, "停利點數") 
+TP = input.float(100, "停利點數") 
 
 //每個整數點有幾個跳動點(ticks)
 BP = 1 / syminfo.mintick
-
 
 //計算短均線與長均線
 L1 = ta.sma(Source, Small_Length)
@@ -44,14 +43,13 @@ L2 = ta.sma(Source, Big_Length)
 //進場條件
 longCondition1 = ta.crossover(L1, L2)
 
-
 //進場
 if longCondition1
     strategy.entry("LE", strategy.long)
 
 //出場
 if strategy.position_size > 0
-    strategy.exit("LX", profit=PT * BP, loss=SL * BP, comment_profit="LX_PT", comment_loss="LX_SL")
+    strategy.exit("TP/SL", "LE", profit=TP * BP, loss=SL * BP, comment_profit="LongTP", comment_loss="LongSL")
 
 //繪圖
 plot(L1,"SmallMA",color.yellow)

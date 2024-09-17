@@ -42,6 +42,14 @@ LongSL = EntryPrice - ( ATR * Mult)
 if (strategy.position_size > 0)
     strategy.exit("TP/SL","LE",limit=LongTP,stop=LongSL,comment_profit="LongTP",comment_loss="LongSL")
 
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
 //繪圖
 plot(L1,"SmallMA",color.yellow)
 plot(L2,"BigMA",color.blue)

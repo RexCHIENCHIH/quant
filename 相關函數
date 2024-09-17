@@ -56,11 +56,11 @@
 
 未平倉相關的函數：
 
-1. strategy.openprofit：所有未平倉倉位的當前未實現損益
+1. strategy.openprofit：查看所有未平倉單(多單或空單)的『總利潤』或『總虧損』
 
 2. strategy.opentrades：只會回傳數量，若沒有公開市場倉位，則返回0。
 
-3. strategy.opentrades.profit()：未平倉交易的損益，虧損為負值。
+3. strategy.opentrades.profit()：查看指定單筆交易的未平倉利潤或虧損，虧損為負值。
 
 4. strategy.opentrades.size：未平倉交易的方向和數量，大於0代表做多，小於0代表做空。
 

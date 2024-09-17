@@ -1,0 +1,37 @@
+
+1. 針對不同的進場方式設定專屬的出場策略
+
+//////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="指定配對出場法",overlay=true, pyramiding=2)
+
+//參數設定
+Small_Length = input.int(50, "短均長度")
+Mid_Length = input.int(100, "中均長度")
+Big_Length = input.int(200, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+
+//計算短均線與長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Mid_Length)
+L3 = ta.sma(Source, Big_Length)
+
+longCondition1 = ta.crossover(L1, L2)
+longCondition2 = ta.crossover(L2, L3)
+
+//進場條件執行
+if longCondition1
+    strategy.entry("LE1", strategy.long)
+else if longCondition2
+    strategy.entry("LE2", strategy.long)
+
+//出場條件執行
+strategy.exit("LX1", "LE1", profit=5000, loss=2000 , comment_profit="LX1_PT", comment_loss="LX1_SL")
+strategy.exit("LX2", "LE2", profit=100000, loss=20000, comment_profit="LX2_PT", comment_loss="LX2_SL")
+
+
+plot(L1,"SmallMA",color.yellow)
+plot(L2,"MidMA",color.blue)
+plot(L3,"BigMA",color.orange)

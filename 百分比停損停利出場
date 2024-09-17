@@ -1,0 +1,44 @@
+
+1. 可以更好地適應不同價格範圍的波動
+
+
+///////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="百分比停損停利",overlay=true)
+
+//參數設定
+Small_Length = input.int(50, "短均長度")
+Big_Length = input.int(100, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//未平倉的進場價
+EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//停損、停利點數
+SL = input.float(2.50, "停損%")  
+TP = input.float(10.00, "停利%") 
+
+// 多頭停損停利
+LongSL = EntryPrice * (1 - SL * 0.01)
+LongTP = EntryPrice * (1 + TP * 0.01)
+
+//計算短均線與長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+
+//進場
+if longCondition1
+    strategy.entry("LE", strategy.long)
+
+// 多頭停利損
+if (strategy.position_size > 0)
+    strategy.exit("TP/SL", "LE", limit=LongTP, stop=LongSL, comment_profit="LongTP", comment_loss="LongSL")
+
+//繪圖
+plot(L1,"SmallMA",color.yellow)
+plot(L2,"BigMA",color.blue)

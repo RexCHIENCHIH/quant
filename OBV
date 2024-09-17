@@ -1,10 +1,19 @@
+
+根據每天的交易量、價格漲跌幅度進行計算，得到一個累積的取值。
+
+1.兩種寫法：量價背離(價格下跌，OBV卻上漲)、均線交叉
+2. ta.obv：計算平衡成交量指標、價格關係
+
+
 //@version=5
 strategy(title="OBV",overlay=false)
 
 //OBV指標計算
 Fast_Length = input.int(20, minval=1, title="短均長度", group="OBV參數設定")
 Slow_Length = input.int(50, minval=1, title="短均長度", group="OBV參數設定")
+
 OBV = ta.obv
+
 Fast_OBV = ta.ema(OBV,Fast_Length)
 Slow_OBV = ta.ema(OBV,Slow_Length)
 

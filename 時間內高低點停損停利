@@ -1,0 +1,52 @@
+
+1. 當價格波動劇烈時，停損點會隨著最近的低點提高。
+2. 根據一定時間內的高低點來設定停損和停利，保護已有的利潤。
+
+////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="時間內高低點停損停利",overlay=true)
+
+//未平倉的進場價
+EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//參數設定
+Small_Length = input.int(20, "短均長度")
+Big_Length = input.int(50, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//計算短均線與長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//出場參數設定
+Box_Length = input.int(20, "箱型出場長度")
+
+//多頭停損停利
+LongSL = ta.lowest(low, Box_Length)
+LongTP = ta.highest(high, Box_Length * 2)
+
+//進場條件
+longCondition1 = ta.crossover(L1, L2)
+
+//進場
+if longCondition1
+    strategy.entry("LE", strategy.long)
+
+// 多頭停利損
+if (strategy.position_size > 0)
+    strategy.exit("LX","LE",stop=LongSL,comment_loss="LongSL") 
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//繪圖
+plot(L1,"SmallMA",color.yellow)
+plot(L2,"BigMA",color.blue)
+plot(LongSL,"LongSL",color.gray)
+plot(LongTP,"LongTP",color.gray)

@@ -15,7 +15,7 @@ Source = input.source(close,title="取樣價格")
 //未平倉的進場價
 EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 
-//停損、停利點數
+//停損、停利%數
 SL = input.float(2.50, "停損%")  
 TP = input.float(10.00, "停利%") 
 

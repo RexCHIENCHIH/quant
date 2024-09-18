@@ -49,8 +49,13 @@
 6. strategy.closedtrades.exit_bar_index()：已平倉出場的K棒編號。
 
 7. strategy.closedtrades.profit：已平倉交易的損益值，虧損為負值。
+   strategy.closedtrades.profit(strategy.closedtrades - 1)：最近一筆的已平倉交易的利潤或虧損。
 
 8. strategy.closedtrades.size：已平倉交易的交易方向和合約數量，大於0代表多單，小於0代表空單。
+
+9. strategy.closedtrades > 0：檢查是否有平倉交易。
+   如果策略中已經有平倉的交易記錄，這個條件就會返回 true。
+   如果沒有平倉交易（即策略還沒有完成過任何交易），它會返回 false。
 
 =================================================================
 

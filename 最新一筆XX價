@@ -1,0 +1,44 @@
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+========================================================================================
+
+
+//計算最近一次進場後，圖表上經歷了多少根K棒
+Bars_Since_Entry = bar_index - 
+ strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+
+
+========================================================================================
+
+//strategy.closedtrades > 0，檢查是否有已平倉的交易
+//bar_index - strategy.closedtrades.exit_bar_index(strategy.closedtrades - 1)
+//計算上次出場後經過了幾根K棒
+
+BarsSinceClosed = strategy.closedtrades > 0 ?
+  bar_index - strategy.closedtrades.exit_bar_index(strategy.closedtrades - 1) : na
+
+========================================================================================
+
+//最近一筆的已平倉交易的利潤或虧損
+LastCloseProfit = strategy.closedtrades.profit(strategy.closedtrades - 1)
+
+if LastCloseProfit>=0
+    longFillter := true
+
+else if LastCloseProfit<0
+    
+  if BarsSinceClosed>=CoolDownBars
+        longFillter := true
+  
+  else if BarsSinceClosed<CoolDownBars
+        longFillter := false
+
+
+
+
+
+
+
+

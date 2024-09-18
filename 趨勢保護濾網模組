@@ -1,0 +1,56 @@
+
+1. 策略是一個波動進場或短線策略時，希望有一個長期趨勢來保護你的交易。
+
+//////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="趨勢保護濾網模組",overlay=true)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//參數設定
+Small_Length = input.int(20, "短均長度")
+Big_Length = input.int(50, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "止盈百分比") 
+
+//短均線、長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)  // 多頭止損價
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  // TP1停利價
+
+//濾網計算
+Trend_Length = input.int(200,"趨勢判斷長度")
+Trend_MA = ta.sma(Source,Trend_Length)
+
+var longFillter = false
+
+if close>Trend_MA
+    longFillter := true
+else
+    longFillter := false
+
+//進場條件
+longCondition1 = L1 > L2
+
+//進場
+if longCondition1 and longFillter
+    strategy.entry("LE", strategy.long)
+
+//出場
+strategy.exit("Long_TP/SL","LE", limit=Long_TP_Price, stop=Long_SL_Price, comment_profit="TP", comment_loss="SL")
+
+//均線繪圖
+plot(L1,"SmallMA",color.yellow,force_overlay = true)
+plot(L2,"BigMA",color.blue,force_overlay = true)
+plot(Trend_MA,"TrendMA",color.purple,force_overlay = true)

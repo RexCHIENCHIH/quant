@@ -1,6 +1,9 @@
 //@version=5
 strategy(title="金/死叉、多空頭排列",overlay=true)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //均線指標計算
 Small_Length = input.int(25,  maxval=1000 , minval=1 , step=1 , title="短均線參數")
 Mid_Length = input.int(50,  maxval=1000 , minval=1 , step=1 , title="中均線參數")

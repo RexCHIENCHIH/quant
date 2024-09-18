@@ -8,6 +8,9 @@
 //@version=5
 strategy(title="基本加碼法",overlay=true, pyramiding=2)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //參數設定
 Small_Length = input.int(50, "短均長度")
 Mid_Length = input.int(100, "中均長度")

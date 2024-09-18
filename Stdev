@@ -8,6 +8,9 @@
 //@version=5
 strategy(title="標準差",overlay=false)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //標準差指標計算
 Stdev_Length  = input.int(20, minval=1, title="長度", group="標準差參數設定")
 Mult = input.float(1.5, minval=0.1, title="標準差倍數", group="標準差參數設定")

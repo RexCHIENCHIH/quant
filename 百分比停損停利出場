@@ -7,6 +7,9 @@
 //@version=5
 strategy(title="百分比停損停利",overlay=true)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //參數設定
 Small_Length = input.int(50, "短均長度")
 Big_Length = input.int(100, "長均長度")

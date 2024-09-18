@@ -62,7 +62,7 @@ else if LastCloseProfit<0
     if BarsSinceClosed>=CoolDownBars
         longFillter := true
     //出場後經歷過的K棒數 < 冷靜期的K棒數(預設為10)，濾網關閉
-    if BarsSinceClosed<CoolDownBars
+    else if BarsSinceClosed<CoolDownBars
         longFillter := false
 
 //進場條件

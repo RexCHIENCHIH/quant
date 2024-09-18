@@ -9,6 +9,9 @@
 //@version=5
 strategy(title="DMI",overlay=false)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //DMI指標計算
 DI_Length = input.int(14, minval=1, title="DI長度", group="DMI參數設定")
 ADX_Smoothing = input.int(17, minval=1, title="ADX平滑度", group="DMI參數設定")

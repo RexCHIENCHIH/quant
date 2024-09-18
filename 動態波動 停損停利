@@ -8,6 +8,9 @@
 //@version=5
 strategy(title="動態波動停損停利",overlay=true)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //未平倉的進場價
 Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 

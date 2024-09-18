@@ -1,0 +1,84 @@
+
+1. 在遭遇虧損後，暫時停止進場交易，直到冷靜期結束後再進行交易，防止因為連續虧損而做出過於激進的決策。
+2. 在經歷虧損後，需要經過一定數量的K棒（時間單位）才能再次進場，避免在虧損後立即再次進場。
+3. 設置冷靜期的K棒數量，如果上一筆交易是虧損交易，則需要經過一定數量的K棒才能再次進場。
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="虧損冷靜期濾網模組",overlay=false)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//計算最近一次進場後，圖表上經歷了多少根K棒
+Bars_Since_Entry = bar_index - 
+ strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+
+//參數設定
+Small_Length = input.int(20, "短均長度")
+Big_Length = input.int(50, "長均長度")
+Source = input.source(close,title="取樣價格")
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "止盈百分比") 
+
+//短均線、長均線
+L1 = ta.sma(Source, Small_Length)
+L2 = ta.sma(Source, Big_Length)
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)  // 多頭止損價
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  // TP1停利價
+
+//濾網計算
+CoolDownBars = input.int(10,"停損後冷靜的K棒數")
+
+var longFillter = false
+
+//strategy.closedtrades > 0，檢查是否有已平倉的交易
+BarsSinceClosed = strategy.closedtrades > 0 ?
+
+//bar_index - strategy.closedtrades.exit_bar_index(strategy.closedtrades - 1)
+//計算上次出場後經過了幾根K棒
+ bar_index - strategy.closedtrades.exit_bar_index(strategy.closedtrades - 1) : na
+
+//最近一筆的已平倉交易的利潤或虧損
+LastCloseProfit = strategy.closedtrades.profit(strategy.closedtrades - 1)
+
+//如果最近一筆的已平倉交易是賺錢的，濾網打開
+if LastCloseProfit>=0
+    longFillter := true
+
+//如果最近一筆的已平倉交易是虧錢的
+//則再根據出場後經歷過的K棒數是否大於冷靜期的K棒數，決定濾網是否打開
+else if LastCloseProfit<0
+    
+    //出場後經歷過的K棒數 > 冷靜期的K棒數(預設為10)，濾網打開
+    if BarsSinceClosed>=CoolDownBars
+        longFillter := true
+    //出場後經歷過的K棒數 < 冷靜期的K棒數(預設為10)，濾網關閉
+    if BarsSinceClosed<CoolDownBars
+        longFillter := false
+
+//進場條件
+longCondition1 = L1 > L2
+
+//進場
+if longCondition1 and longFillter
+    strategy.entry("LE", strategy.long)
+
+//出場
+strategy.exit("Long_TP/SL","LE", limit=Long_TP_Price, stop=Long_SL_Price, comment_profit="TP", comment_loss="SL")
+
+//均線繪圖
+plot(L1,"SmallMA",color.yellow,force_overlay = true)
+plot(L2,"BigMA",color.blue,force_overlay = true)
+
+//冷靜期的K棒數繪圖
+plot(BarsSinceClosed,style = plot.style_histogram)
+hline(CoolDownBars, "CoolDownBars", color=color.gray,linestyle=hline.style_solid)

@@ -43,7 +43,7 @@ else
 //進場條件
 longCondition1 = L1 > L2
 
-//進場
+//進場，短均>長均，且收盤價大於200日均線，確認有長期趨勢支撐
 if longCondition1 and longFillter
     strategy.entry("LE", strategy.long)
 

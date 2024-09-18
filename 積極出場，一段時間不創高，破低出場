@@ -7,6 +7,9 @@
 //@version=5
 strategy(title="積極出場，一段時間不創高，破低出場",overlay=false)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //未平倉的進場價
 EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 

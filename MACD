@@ -1,6 +1,9 @@
 //@version=5
 strategy(title="MACD",overlay=false)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //MACD指標計算
 Fast_Lenght = input.int(12, minval=1, maxval=100, step=1, title="MACD快線", group="參數設定")
 Slow_Length = input.int(26, minval=1, maxval=200, step=1, title="MACD慢線", group="參數設定")

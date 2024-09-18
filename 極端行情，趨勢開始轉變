@@ -9,6 +9,9 @@
 //@version=5
 strategy(title="極端行情，趨勢開始轉變",overlay=true)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //未平倉的進場價
 EntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 

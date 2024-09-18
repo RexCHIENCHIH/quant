@@ -1,6 +1,9 @@
 //@version=5
 strategy(title="RSI",overlay=false)
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
 //參數設定
 RSI_Length = input.int(14, minval=1, maxval=1000, step=2, title="RSI長度", group="RSI參數設定")
 RSI_Upper = input.int(70, minval=0, maxval=100, step=5, title="RSI上軌", group="RSI參數設定")

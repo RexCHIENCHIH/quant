@@ -1,0 +1,198 @@
+
+一、相減
+
+1. 主要針對期貨與現貨之間的價差變動進行交易，適用於避開市場的『系統性風險』
+2. 價差：期貨價格 - 現貨價格。
+   隨著期貨結算日的臨近，期現貨的價差會逐步縮小，並在結算前通常趨近於零
+
+3. 價差發散：當價差變大（超過一定門檻）時，代表市場走勢持續加強，適合順勢操作。
+4. 價差收斂：當價差超過門檻後，判斷其未來可能回歸正常水準，適合逆勢操作
+5. 濾網機制：透過價差作為濾網，過濾盤整行情以避免不必要的交易
+
+///////////////////////////////////////////////////////////////////////////////
+
+二、相除
+
+1. 由於兩個商品的價格級別不同（如比特幣價格遠高於以太幣）
+   採用除法來計算價差，這樣可以保持價格差異的顯著性。
+
+2. 計算價差的移動平均（均線）與其標準差，進而形成布林通道，用來判斷價差是否突破上下軌
+3. 價差收斂策略：當價差從布林通道的下軌向上突破時，做多；當價差從上軌向下突破時，做空
+4. 價差發散策略：當價差突破上軌時做多，突破下軌時做空，以捕捉價差的延續發展。
+
+///////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="相減價差交易模組",overlay=false)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//指標計算
+
+//預設Data1為台指期 TXF! 60M , Data2為加權指數
+Data2 = input.symbol("TWSE:IX0001","Data2商品") 
+Data2_timeframe = input.timeframe("15","Data2時間週期")
+Data2_close = request.security(Data2,Data2_timeframe,close)
+
+Gap = input.float(50.00,"價差閥值")
+Spread = close - Data2_close
+
+type = input.string("價差發散", options = ["價差發散","價差收斂"])
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "停利百分比") 
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+//進場條件
+var Long_Entry = false
+var Short_Entry = false
+
+if type=="價差收斂"
+    Long_Entry := ta.crossover(Spread,-Gap)
+    Short_Entry := ta.crossunder(Spread,Gap)
+else if type=="價差發散"
+    Long_Entry := ta.crossover(Spread,Gap)
+    Short_Entry := ta.crossunder(Spread,-Gap)
+
+
+//多空進場
+if Long_Entry 
+    strategy.entry("LE", strategy.long)
+
+if Short_Entry
+    strategy.entry("SE",strategy.short)
+
+//多空出場
+if strategy.position_size>0
+    strategy.exit("Long_TP/SL","LE",limit=Long_TP_Price,stop=Long_SL_Price,
+     comment_profit="Long_TP",comment_loss="Long_SL")
+
+if strategy.position_size<0
+    strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
+     comment_profit="Short_TP",comment_loss="Short_SL")
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//連三根漲跌進場繪圖
+plot(Data2_close,"Data2",force_overlay = true)
+plot(Spread,"Spread")
+
+///////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="相除價差交易模組",overlay=false)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//預設Data1為台指期 TXF! 60M , Data2為加權指數
+Data2 = input.symbol("pepperstone:BTCUSD","Data2商品") //預設Data1為OKX:ETHUSDT 1小時
+Data2_timeframe = input.timeframe("60","Data2時間週期")
+Data2_close = request.security(Data2,Data2_timeframe,close)
+
+//相除價差取均線
+Length = input.int(20,"均線長度")
+Mult = input.float(2.00,"標準差倍數")
+Spread = Data2_close / close
+
+//價差布林通道
+dev = ta.stdev(Spread,Length)
+Basis_Spread_MA = ta.sma(Spread,Length)
+Upper = Basis_Spread_MA + Mult*dev
+Lower = Basis_Spread_MA - Mult*dev
+
+type = input.string("價差發散", options = ["價差發散","價差收斂"])
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "停利百分比") 
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+//進場條件
+var Long_Entry = false
+var Short_Entry = false
+
+if type=="價差收斂"
+    Long_Entry := ta.crossover(Spread,Lower)
+    Short_Entry := ta.crossunder(Spread,Upper)
+else if type=="價差發散"
+    Long_Entry := ta.crossover(Spread,Upper)
+    Short_Entry := ta.crossunder(Spread,Lower)
+
+
+//多空進場
+if Long_Entry 
+    strategy.entry("LE", strategy.long)
+
+if Short_Entry
+    strategy.entry("SE",strategy.short)
+
+//多空出場
+if strategy.position_size>0
+    strategy.exit("Long_TP/SL","LE",limit=Long_TP_Price,stop=Long_SL_Price,
+     comment_profit="Long_TP",comment_loss="Long_SL")
+
+if strategy.position_size<0
+    strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
+     comment_profit="Short_TP",comment_loss="Short_SL")
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//繪圖
+plot(Spread,"Spread")
+plot(Basis_Spread_MA,color = color.silver)
+plot(Upper,color = color.red)
+plot(Lower,color = color.green)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

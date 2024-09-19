@@ -1,0 +1,69 @@
+
+1. 紅三兵：連續出現三根紅色K棒，代表價格持續上漲，通常意味著後市看漲
+2. 黑三兵：連續出現三根黑色K棒，代表價格持續下跌，意味著後市看跌
+3. 可以根據K棒的漲跌幅度來設定門檻值，以過濾不顯著的波動
+
+////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="紅三兵/黑三兵交易模組",overlay=true)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//指標計算
+volatility = input.float(0.2, minval=0.00, title="漲跌%")
+volatility_percent = volatility*0.01
+
+KBar_UP = ((close - close[1]) / close[1] > volatility_percent)
+KBar_DN = ((close - close[1]) / close[1] < -volatility_percent)
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "停利百分比") 
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+//進場條件
+//連續三根連漲超過0.2%
+Long_Entry = KBar_UP and KBar_UP[1] and KBar_UP[2]
+
+//連續三根連跌超過0.2%
+Short_Entry = KBar_DN and KBar_DN[1] and KBar_DN[2]
+
+//多空進場
+if Long_Entry 
+    strategy.entry("LE", strategy.long)
+
+if Short_Entry
+    strategy.entry("SE",strategy.short)
+
+//多空出場
+if strategy.position_size>0
+    strategy.exit("Long_TP/SL","LE",limit=Long_TP_Price,stop=Long_SL_Price,
+     comment_profit="Long_TP",comment_loss="Long_SL")
+
+if strategy.position_size<0
+    strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
+     comment_profit="Short_TP",comment_loss="Short_SL")
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//連三根漲跌進場繪圖
+plotshape(KBar_UP,title="單根漲",color = color.red,
+ location=location.belowbar,style=shape.triangleup,size=size.tiny)
+plotshape(KBar_DN,title="單根跌",color=color.green,
+ location=location.abovebar,style=shape.triangledown,size=size.tiny)

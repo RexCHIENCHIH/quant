@@ -62,6 +62,14 @@ if strategy.position_size<0
     strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
      comment_profit="Short_TP",comment_loss="Short_SL")
 
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
 //單根漲跌繪圖
 plotshape((close-open) / close > reverse_percent ? true : na ,
  title="單根大漲",style=shape.diamond,location=location.abovebar)

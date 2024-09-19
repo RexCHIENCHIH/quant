@@ -1,5 +1,71 @@
 
-1. 單根K棒反轉，就是小週期的AV轉
-2. 參考單根K棒作為趨勢是否反轉的指標，視為短線是否轉折的依據
-3. 當根K棒直接把上一根K棒吃掉 / 吞噬
-4. 例如
+1. 利用K線圖中的單一K棒形態來判斷市場反轉訊號
+2. 根K棒反轉 是一種形態學，利用單根K棒的形態來判斷趨勢是否反轉。
+   通常應用於大週期的趨勢中，如4小時、8小時或日線級別。
+
+3. 吞噬形態 等反轉信號是該策略的核心，當某根K棒完全吞噬上一根K棒，便形成反轉信號
+4. 針對不同時間週期下的K棒，並依據波動百分比來決定進出場點。
+5. 不同時間週期的對應：短周期（如15分鐘）的形態若轉換至更長週期（如1小時）可視為更大時間框架下的單根K棒反轉
+6. 根據預設的百分比（如漲跌3%）來判定K棒是否符合「單根K棒反轉」的標準，並據此進行買入或賣出操作
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="單根K棒反轉",overlay=true)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//指標計算
+Reverse = input.float(3, minval=0.01, title="反轉%")
+reverse_percent = Reverse*0.01
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "停利百分比") 
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+//濾網計算
+Length = input.int(100, "高低檔判斷長度")
+
+//進場條件
+
+//open[1] > close[1]，前一根K棒收『綠K』，且『跌幅』達預設3%
+//且收盤價 > 前一根開盤 (代表收盤漲超過前一根開盤價，完全吞噬)
+Long_Entry = ( open[1]-close[1] ) /close[1] > reverse_percent and close>open[1]
+
+//open[1] < close[1]，前一根K棒收『紅K』，且『漲幅』達預設3%
+//且收盤價 < 前一根開盤 (代表收盤跌超過前一根開盤價，完全吞噬)
+Short_Entry = ( close[1]-open[1] ) / close[1] > reverse_percent and close<open[1]
+
+//多空進場
+if Long_Entry 
+    strategy.entry("LE", strategy.long)
+
+if Short_Entry
+    strategy.entry("SE",strategy.short)
+
+//多空出場
+if strategy.position_size>0
+    strategy.exit("Long_TP/SL","LE",limit=Long_TP_Price,stop=Long_SL_Price,
+     comment_profit="Long_TP",comment_loss="Long_SL")
+
+if strategy.position_size<0
+    strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
+     comment_profit="Short_TP",comment_loss="Short_SL")
+
+//單根漲跌繪圖
+plotshape((close-open) / close > reverse_percent ? true : na ,
+ title="單根大漲",style=shape.diamond,location=location.abovebar)
+
+plotshape((open-close) / close > reverse_percent ? true : na ,
+ title="單根大跌",style=shape.diamond,location=location.belowbar)
+

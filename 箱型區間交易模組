@@ -1,0 +1,77 @@
+
+1. 透過識別價格運行的區間（箱型）來決定交易進出場點
+2. 當價格突破區間上下限，則進行順勢交易；而當價格回到箱型內，則進行逆勢交易
+
+3. 箱型區間：價格在一定範圍內波動，形成上方的壓力線（高點）和下方的支撐線（低點），稱為箱型
+4. 經典突破：當價格突破箱型的高點或低點時，視為趨勢延續，進行順勢交易
+5. 逆勢抄底：當價格跌破箱型後再次回到箱型內，視為價格反轉，進行逆勢交易
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="箱型區間交易模組",overlay=true)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//指標計算
+Length = input.int(20, minval=3, title="箱型區間的寬度")
+type = input.string("經典突破", options = ["經典突破","逆勢抄底"])
+
+BoxHigh = ta.highest(high,Length) 
+BoxLow = ta.lowest(low,Length) 
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "停利百分比") 
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+//進場條件
+
+var Long_Entry = false
+var Short_Entry = false
+
+if type=="經典突破"
+    Long_Entry := close>BoxHigh[1] //突破前20根K棒的最高點
+    Short_Entry := close<BoxLow[1] //跌破前20根K棒的最低點
+else if type=="逆勢抄底"
+    Long_Entry := ta.crossover(close,BoxLow[1]) //收盤價和前20根K棒的最低點金叉
+    Short_Entry := ta.crossunder(close,BoxHigh[1]) //收盤價和前20根K棒的最糕點死叉
+
+//多空進場
+if Long_Entry 
+    strategy.entry("LE", strategy.long)
+
+if Short_Entry
+    strategy.entry("SE",strategy.short)
+
+//多空出場
+if strategy.position_size>0
+    strategy.exit("Long_TP/SL","LE",limit=Long_TP_Price,stop=Long_SL_Price,
+     comment_profit="Long_TP",comment_loss="Long_SL")
+
+if strategy.position_size<0
+    strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
+     comment_profit="Short_TP",comment_loss="Short_SL")
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//單根漲跌繪圖
+plot(BoxHigh[1],title="箱型壓力",color=color.red)
+plot(BoxLow[1],title="箱型支撐",color=color.green)
+
+

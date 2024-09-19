@@ -1,4 +1,29 @@
 
+觀念釐清：
+1. bar_index 是一個隨著 K 棒生成自動累加的指標，不會從右到左，而是從最左邊的第一根 K 棒開始計數。
+
+   舉例來看：
+   假設你有 100 根 K 棒在圖表上：
+   最左邊的第一根 K 棒：bar_index = 0
+   第二根 K 棒：bar_index = 1
+   第三根 K 棒：bar_index = 2
+   最右邊的最新一根 K 棒：bar_index = 99（如果總共有 100 根 K 棒的話）
+
+2. strategy.opentrades：目前策略中開倉的交易數量
+   因為編程中的索引是從 0 開始，所以 strategy.opentrades - 1 是用來取得最新一筆開倉交易的索引
+   假設現在你有 3 筆開倉的交易，strategy.opentrades 的值會是 3
+   那麼 strategy.opentrades - 1 等於 2，即表示最新的一筆開倉交易。
+   第1筆開倉交易：索引 0
+   第2筆開倉交易：索引 1
+   第3筆開倉交易：索引 2 （這就是 strategy.opentrades - 1）
+
+3. strategy.opentrades 代表目前的開倉交易數量。
+   strategy.opentrades - 1 用來取得最新一筆開倉交易的索引（因為索引從 0 開始）。
+   假設有 n 筆開倉交易，最新的一筆交易的索引是 n - 1。
+
+
+========================================================================================
+
 //未平倉的進場價
 Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 

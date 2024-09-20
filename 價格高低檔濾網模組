@@ -38,18 +38,18 @@ Length = input.int(100, "高低檔判斷長度")
 //Relative Price相對價格，最近100根K棒的 (最高最+最低價) / 2
 RP = (ta.highest(high,Length) + ta.lowest(low,Length)) / 2 
 
-var longFillter = false
+var longFilter = false
 
 if close > RP
-    longFillter := true
+    longFilter := true
 else
-    longFillter := false
+    longFilter := false
 
 //進場條件
 longCondition1 = L1 > L2
 
 //進場
-if longCondition1 and longFillter
+if longCondition1 and longFilter
     strategy.entry("LE", strategy.long)
 
 //出場

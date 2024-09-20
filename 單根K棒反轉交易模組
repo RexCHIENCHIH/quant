@@ -40,7 +40,7 @@ Length = input.int(100, "高低檔判斷長度")
 
 //open[1] > close[1]，前一根K棒收『綠K』，且『跌幅』達預設3%
 //且收盤價 > 前一根開盤 (代表收盤漲超過前一根開盤價，完全吞噬)
-Long_Entry = ( open[1]-close[1] ) /close[1] > reverse_percent and close>open[1]
+Long_Entry = ( close[1]-open[1] ) /close[1] < -reverse_percent and close>open[1]
 
 //open[1] < close[1]，前一根K棒收『紅K』，且『漲幅』達預設3%
 //且收盤價 < 前一根開盤 (代表收盤跌超過前一根開盤價，完全吞噬)

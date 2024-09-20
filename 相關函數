@@ -96,6 +96,8 @@
 部位相關的函數：
 
 1. strategy.position_avg_price：當前部位的平均進場價格。如果沒有部位，則返回空值。
+   做多時，strategy.position_size 會由 0 逐漸遞增（如 0 → 1 → 2 → 3）。
+   做空時，strategy.position_size 會由 0 逐漸遞減（如 0 → -1 → -2 → -3）。
 
 2. strategy.position_size：當前部位的方向和數量，大於0表示多單，小於0表示空單。
 

@@ -89,7 +89,7 @@ colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
 //force_overlay：呈現在主圖
 bgcolor(colorBG, force_overlay=true)
 
-//連三根漲跌進場繪圖
+//繪圖
 plot(Data2_close,"Data2",force_overlay = true)
 plot(Spread,"Spread")
 

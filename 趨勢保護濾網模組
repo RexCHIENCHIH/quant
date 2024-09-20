@@ -33,18 +33,18 @@ Long_TP_Price = Entry_Price * (1 + TP * 0.01)  // TP1停利價
 Trend_Length = input.int(200,"趨勢判斷長度")
 Trend_MA = ta.sma(Source,Trend_Length)
 
-var longFillter = false
+var longFilter = false
 
 if close>Trend_MA
-    longFillter := true
+    longFilter := true
 else
-    longFillter := false
+    longFilter := false
 
 //進場條件
 longCondition1 = L1 > L2
 
 //進場，短均>長均，且收盤價大於200日均線，確認有長期趨勢支撐
-if longCondition1 and longFillter
+if longCondition1 and longFilter
     strategy.entry("LE", strategy.long)
 
 //出場

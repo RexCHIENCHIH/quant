@@ -1,0 +1,124 @@
+
+1. 價格達到進場後的高點或低點，當價格反彈或回撤達到設定的點數時出場。
+2. 具體操作是設定一個固定的點數，當價格從進場後的最高點下跌超過該點數，便觸發多單的出場
+   而空單則是從進場後的最低點反彈達到設定點數時出場。
+
+3. CountBarsSinceEntry：計算進場後經過了多少根K棒。
+   每當進場時，該變數會被重置為1，之後每收一根K棒便累加，直到出場。
+
+4. 進場後會記錄高點與低點，分別透過ta.highest與ta.lowest函數計算。
+   這些值會用來判斷價格是否達到設定的回撤點數，進而決定是否出場
+
+5. 是一種隨著進場後的盤勢，在一定的限制範圍內，自動調整出場
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="價格反彈拉回點數 停損停利出場",overlay=true,max_bars_back=300)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//進場後經過了幾根K棒
+Bars_SinceEntry = bar_index - 
+ strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+
+///均線參數
+Small_Length = 20//input.int(20, "短均線的長度")
+Big_Length = 50//input.int(50, "長均線的長度")
+Source = input.source(close,"取樣價格")
+
+//拉回點數
+PB_Point = input.float(50.00,"拉回點數")
+
+//計算短均線與長均線
+SmallMA = ta.sma(Source, Small_Length)
+BigMA = ta.sma(Source, Big_Length)
+
+//進場
+LongCondition = ta.crossover(SmallMA, BigMA)
+
+//出場條件執行
+
+//可計算出進場後經歷過了幾根K棒
+var Count_Bars_SinceEntry = 0
+
+//有進場代表部位有變動，現在的部位和上一根K棒部位不一樣，且現在部位不是0
+//可能上一根K棒是空手，這一根K棒進場
+//若部位有變動，但變成0，代表的含意是出場而非進場，因為是要算進場後經過幾根K棒
+if strategy.position_size != strategy.position_size[1] and 
+ strategy.position_size != 0
+
+    //從1開始計算
+    Count_Bars_SinceEntry := 1
+
+//持有部位，但部位沒有變動，代表說又經過一根K棒
+//因此Coun_Bars_SinceEntry要+1
+else if strategy.position_size != 0
+    Count_Bars_SinceEntry := Count_Bars_SinceEntry + 1
+
+//現在部位是0，代表空手沒有進場，進場後經過了幾根K棒這個前提就不存在
+else if strategy.position_size == 0
+    Count_Bars_SinceEntry := 0
+
+
+//一段時間內的最高價，這段時間就是進場後經過了幾根K棒的最高點
+//math.max目的是要除錯，因為Count_Bars_SinceEntry可能為0
+//取0根最低價會出錯，因此至少取一根
+HH = ta.highest(high,math.max(Count_Bars_SinceEntry,1))
+
+//一段時間內的最低價，這段時間就是進場後經過了幾根K棒的最低點
+//math.max目的是要除錯，因為Count_Bars_SinceEntry可能為0
+//取0根最低價會出錯，因此至少取一根
+LL = ta.lowest(low,math.max(Count_Bars_SinceEntry,1))
+
+
+//但最高最低價不是隨時都可以用，因為可能會在Count_Bars_SinceEntry為0時做運算
+//當Count_Bars_SinceEntry != 0 時，計算出最高價和最低價，賦值給這兩個變數
+var High_SinceEntry = 0.00
+var Low_SinceEntry = 0.00
+
+if Count_Bars_SinceEntry > 0  
+
+    //進場之後的最高點，就可以算出從最高點拉回多少點
+    High_SinceEntry := HH
+    //進場之後的最低點，就可以算出從最低點彈回多少點
+    Low_SinceEntry := LL
+else 
+    High_SinceEntry := 0.00
+    Low_SinceEntry := 0.00
+
+//拉回價格
+var PB_Price = 0.00
+
+//場上持有多單，拉回價格就是進場之後的最高價 - 拉回點數
+if strategy.position_size > 0
+    PB_Price := High_SinceEntry-PB_Point
+
+//場上持有空單，彈回價格就是進場之後的最低價 + 拉回點數
+else if strategy.position_size < 0
+    PB_Price := Low_SinceEntry+PB_Point
+
+else 
+    PB_Price := 0.00
+
+//進場多單
+if LongCondition
+    strategy.entry("LE", strategy.long)
+
+strategy.exit("LX_拉回出場","LE", stop=PB_Price)
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+plot(SmallMA,"SmallMA",color.yellow)
+plot(BigMA,"BigMA",color.blue)
+plot(PB_Price[1]>0 ? PB_Price[1] : na,"PBPrice",color.red, style = plot.style_stepline)

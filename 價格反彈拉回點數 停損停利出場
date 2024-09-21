@@ -57,13 +57,13 @@ if strategy.position_size != strategy.position_size[1] and
 
 //持有部位，但部位沒有變動，代表說又經過一根K棒
 //因此Coun_Bars_SinceEntry要+1
-else if strategy.position_size != 0
+else if strategy.position_size != 0 and 
+     strategy.position_size == strategy.position_size[1]
     Count_Bars_SinceEntry := Count_Bars_SinceEntry + 1
 
 //現在部位是0，代表空手沒有進場，進場後經過了幾根K棒這個前提就不存在
 else if strategy.position_size == 0
     Count_Bars_SinceEntry := 0
-
 
 //一段時間內的最高價，這段時間就是進場後經過了幾根K棒的最高點
 //math.max目的是要除錯，因為Count_Bars_SinceEntry可能為0
@@ -109,7 +109,7 @@ else
 if LongCondition
     strategy.entry("LE", strategy.long)
 
-strategy.exit("LX_拉回出場","LE", stop=PB_Price)
+strategy.exit("LX","LE", stop=PB_Price)
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :

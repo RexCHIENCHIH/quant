@@ -21,6 +21,16 @@ if shortExit and strategy.position_size < 0
 
 /////////////////////////////////////////////////////////////////////
 
+//出場參數
+SL = input.float(10.0, "停損百分比")  
+TP = input.float(10.0, "停利百分比") 
+
+//停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
 //多單進場
 if LongCondition 
     strategy.entry("LE", strategy.long)

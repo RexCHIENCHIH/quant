@@ -1,3 +1,23 @@
+
+// 輸入設定
+n = input.int(20, title="TEMA Length") // TEMA 長度，預設為 14
+N = input.int(3, title="Two -TEMA Length Mult") 
+
+// 計算 n 日 EMA
+ema1 = ta.ema(close, n) 
+ema2 = ta.ema(ema1, n) 
+ema3 = ta.ema(ema2, n) 
+
+ema4 = ta.ema(close, n*N) 
+ema5 = ta.ema(ema1, n*N) 
+ema6 = ta.ema(ema2, n*N)
+
+// 計算 TEMA
+TEMA1 = (3 * ema1) - (3 * ema2) + ema3 
+TEMA2 = (3 * ema4) - (3 * ema5) + ema6 
+
+//////////////////////////////////////////////////////////////////////
+
 //@version=5
 strategy(title="金/死叉、多空頭排列",overlay=true)
 

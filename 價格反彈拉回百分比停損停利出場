@@ -98,7 +98,7 @@ else if Over_Profit == false
         PB_Price := Short_SL_Price
 
 //多單進場
-if LongCondition
+if LongCondition and strategy.position_size<=0
     strategy.entry("LE", strategy.long)
 
 //多單出場

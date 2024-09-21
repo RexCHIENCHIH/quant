@@ -8,13 +8,13 @@ longExit = ta.crossunder(Efficiency, 0)
 shortExit = ta.crossover(Efficiency, 0) 
 
 // 多單委託
-if longCondition and strategy.position_size<=0
+if longCondition 
     strategy.entry("LE", strategy.long)
 if longExit and strategy.position_size > 0
     strategy.close("LE")
 
 // 空單委託
-if ShortCondition and strategy.position_size>=0
+if ShortCondition 
     strategy.entry("SE", strategy.short) 
 if shortExit and strategy.position_size < 0
     strategy.close("SE")

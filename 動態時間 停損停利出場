@@ -3,3 +3,77 @@
 2. 遞減長度：設置K棒的數量來分攤初始停損，並隨著每根K棒遞減停損點數（例如10根K棒，每根K棒減少10點）。
 3. 逐步調整停損點：隨著K棒推進，逐漸縮小停損範圍。
 4. 這種方法會主動逼近價格，逼迫市場朝著有利方向運行，否則及早出場，減少損失。
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="價格反彈拉回百分比 停損停利出場",overlay=true,max_bars_back=300)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//進場後經過了幾根K棒
+Bars_SinceEntry = bar_index - 
+ strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+
+///均線參數
+Small_Length = 20//input.int(20, "短均線的長度")
+Big_Length = 50//input.int(50, "長均線的長度")
+Source = input.source(close,"取樣價格")
+
+//計算短均線與長均線
+SmallMA = ta.sma(Source, Small_Length)
+BigMA = ta.sma(Source, Big_Length)
+
+//初始的停損點數設為100點，這是動態止損的基礎值
+PB_Point = input.float(100.00,"初始拉回點數") 
+
+//遞減的K棒數設為10根，這表示將初始的停損點數在10根K棒上逐步遞減     
+Bars_Back = input.int(10, "遞減長度") 
+
+//每根K棒遞減的點數，等於初始停損點數除以遞減的K棒數
+Base_Point = PB_Point / Bars_Back 
+
+//進場
+LongCondition = ta.crossover(SmallMA, BigMA)
+
+//出場條件執行，計算進場後經歷過了幾根K棒
+var Count_Bars_SinceEntry = 0
+
+if strategy.position_size != strategy.position_size[1] and 
+ strategy.position_size != 0
+    Count_Bars_SinceEntry := 1
+
+else if strategy.position_size != 0 and 
+     strategy.position_size == strategy.position_size[1]
+    Count_Bars_SinceEntry := Count_Bars_SinceEntry + 1
+
+else if strategy.position_size == 0
+    Count_Bars_SinceEntry := 0
+
+//價格拉回、彈回，根據進場價格與經過的K棒數計算動態止損點，隨著經過的K棒數逐步減少止損距離
+Long_PB_Price = (Entry_Price - PB_Point) + (Count_Bars_SinceEntry * Base_Point)
+Short_PB_Price = (Entry_Price + PB_Point) - (Count_Bars_SinceEntry * Base_Point)
+
+//多單進場
+if LongCondition
+    strategy.entry("LE", strategy.long)
+
+//多單出場
+if strategy.position_size > 0 
+    strategy.exit("LX","LE", stop=Long_PB_Price)
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+plot(SmallMA,"SmallMA",color.yellow)
+plot(BigMA,"BigMA",color.blue)
+plot(Long_PB_Price>0 ? Long_PB_Price : na,"PBPrice",color.red, style = plot.style_stepline)

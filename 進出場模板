@@ -1,11 +1,11 @@
 
 //進場條件
-longCondition = ta.crossover(Efficiency,Eff)
-ShortCondition = ta.crossunder(Efficiency,-Eff)
+longCondition = 
+ShortCondition = 
 
 //出場條件
-longExit = ta.crossunder(Efficiency, 0) 
-shortExit = ta.crossover(Efficiency, 0) 
+longExit = 
+shortExit = 
 
 // 多單委託
 if longCondition 

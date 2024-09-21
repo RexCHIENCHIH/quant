@@ -1,0 +1,96 @@
+
+1. AR：衡量一段時間內的買賣氣勢強度，通常與開盤價相關聯，反映市場參與者當天的積極程度。
+   AR 值高表示價格向上推動強勁，AR 值低表示價格向下壓力較大
+   公式：26日 AR 值 = (今日最高價 - 今日開盤價) 26日內累計總數 / (今日開盤價 - 今日最低價) 26日內累計總數
+
+
+3. BR：價格是在高價區還是低價區，與昨日收盤價相關聯，反映了市場的買賣意願。
+   BR值高表示市場買入意願強烈，BR 值低表示市場賣出意願強
+   公式：26日 BR 值 = (今日最高價 - 昨日收盤價) 26日內累計總數 / (昨日收盤價 - 今日最低價) 26日內累計總數
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy("AR & BR Strategy", overlay=false)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+// 輸入設定
+ar_length = input.int(26, title="AR Length")
+br_length = input.int(26, title="BR Length")
+
+//AR分子
+ar_numerator = math.sum(high - open, ar_length) 
+
+//AR分母
+ar_denominator = math.sum(open - low, ar_length)
+
+//AR值，通常與開盤價相關聯，反映市場參與者當天的積極程度
+AR = ar_numerator / ar_denominator
+AR1 = ta.ema(AR,20)
+AR2 = ta.ema(AR,60)
+
+//BR分子
+br_numerator = math.sum(high - close[1], br_length) 
+
+//BR分母
+br_denominator = math.sum(close[1] - low, br_length) 
+
+//BR值，與昨日收盤價相關聯，反映了市場的買賣意願
+BR = br_numerator / br_denominator
+BR1 = ta.ema(BR,20)
+BR2 = ta.ema(BR,60)
+
+//出場參數
+SL = input.float(10.0, "停損百分比")  
+TP = input.float(10.0, "停利百分比") 
+
+//停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+//進場條件
+LongCondition = ta.crossover(AR,BR)
+ShortCondition = ta.crossunder(AR,BR)
+
+//出場條件
+LongExit = ShortCondition
+ShortExit = LongCondition
+
+// 多單委託
+if LongCondition 
+    strategy.entry("LE", strategy.long)
+//多單出場
+if strategy.position_size > 0 
+    strategy.exit("Long_TP/SL","LE",limit=Long_TP_Price,stop=Long_SL_Price,
+     comment_profit="Long_TP",comment_loss="Long_SL")
+
+// 空單委託
+if ShortCondition 
+    strategy.entry("SE", strategy.short) 
+//空單出場
+if strategy.position_size<0
+    strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
+     comment_profit="Short_TP",comment_loss="Short_SL")
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+// 繪製 AR 和 BR 指標
+plot(AR, color=color.blue, title="AR")
+plot(BR, color=color.red, title="BR")
+plot(AR1,"AR1",color.green)
+plot(AR2,"AR2",color.yellow)
+plot(BR1,"BR1",color.purple)
+plot(BR2,"BR2",color.orange)

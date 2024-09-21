@@ -1,0 +1,44 @@
+//@version=5
+strategy(title="Commodity Channel Index", shorttitle="CCI",overlay=false)
+
+//CCI = D / 0.015 * MD
+Length = input.int(20,"K棒長度")
+Mult = input.float(0.015,"偏差係數")
+TP = input.source(hlc3, "Source")
+CCI_Gap = input.int(100,"CCI閥值")
+
+// 計算TP的n根K棒的簡單移動平均
+TP_MA = ta.ema(TP,Length)
+
+//偏差 (D):TP與其n根K棒均值的差值，可能為負數
+D = TP - TP_MA
+
+//計算偏差的絕對值的平均 (Mean Deviation, MD)
+MD = ta.ema(math.abs(D),Length)
+
+//CCI
+CCI = D / (Mult * MD)
+
+LongCondition  = ta.crossover(CCI,CCI_Gap)
+ShortCondition = ta.crossunder(CCI,-CCI_Gap)
+
+LongExit = ta.crossunder(CCI,0)
+ShortExit = ta.crossover(CCI,0)
+
+if LongCondition 
+    strategy.entry("LE",strategy.long)
+
+if LongExit  and strategy.position_size > 0
+    strategy.close("LE")
+
+// 空單委託
+if ShortCondition 
+    strategy.entry("SE", strategy.short) 
+if ShortExit  and strategy.position_size < 0
+    strategy.close("SE")
+
+//繪圖
+plot(CCI,"CCI",color.red)
+hline(CCI_Gap)
+hline(-CCI_Gap)
+hline(0)

@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 //@version=5
-strategy(title="價格反彈拉回百分比 停損停利出場",overlay=true,max_bars_back=300)
+strategy(title="動態時間停損停利出場",overlay=true,max_bars_back=300)
 
 //每次收K都清空委託單
 strategy.cancel_all()

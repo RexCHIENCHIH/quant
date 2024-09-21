@@ -1,0 +1,68 @@
+
+//@version=5
+strategy(title="高效波段策略",overlay=false)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//進場後經過了幾根K棒
+Bars_SinceEntry = bar_index - 
+ strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+
+//指標計算
+Length = input.int(20, "K棒長度計算")
+
+//進場的效率閾值
+Eff = input.float(0.5, "效率閥值") 
+
+//每根K棒之間的距離，取絕對值
+Single_Distance = math.abs(close - close[1]) 
+
+//計算N根K棒內所有距離的總和（即N-1根距離的和
+Total_Distance = math.sum(Single_Distance, Length - 1) 
+
+//直線距離，即最新K棒的收盤價與N根前的收盤價之差。
+Straight_Distance = close - close[Length] 
+
+//計算效率值：直線距離除以總距離。
+//效率：Straight_Distance為固定，則Efficiency和Total_Distance為反比
+//若暴漲暴跌，則Total_Distance會很大，Efficiency則很小，即沒有效率
+Efficiency = Straight_Distance / Total_Distance 
+
+//進場條件
+longCondition = ta.crossover(Efficiency,Eff)
+ShortCondition = ta.crossunder(Efficiency,-Eff)
+
+//出場條件
+longExit = ta.crossunder(Efficiency, 0) 
+shortExit = ta.crossover(Efficiency, 0) 
+
+// 多單委託
+if longCondition and strategy.position_size<=0
+    strategy.entry("LE", strategy.long)
+if longExit and strategy.position_size > 0
+    strategy.close("LE")
+
+// 空單委託
+if ShortCondition and strategy.position_size>=0
+    strategy.entry("SE", strategy.short) 
+
+if shortExit and strategy.position_size < 0
+    strategy.close("SE")
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+// 畫出效率指標
+plot(Efficiency) 
+hline(0.5)
+hline(-0.5)
+hline(0)

@@ -1,6 +1,12 @@
 //@version=5
 strategy(title="Commodity Channel Index", shorttitle="CCI",overlay=false)
 
+/每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
 //CCI = D / 0.015 * MD
 Length = input.int(20,"K棒長度")
 Mult = input.float(0.015,"偏差係數")

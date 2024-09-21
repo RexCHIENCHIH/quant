@@ -1,0 +1,104 @@
+
+1. 持倉時間較短，因此風險相對較低，避免持倉過夜帶來的突發風險
+2. 根據當天市場的走勢進行進出場決策
+
+3. 時間濾網：透過設定特定的交易時間段，限制交易只發生在日內某個時間範圍內
+   時間在這個範圍內，才會允許策略執行進出場操作。
+
+4. 出場條件：在設定的時間內價格達到這些價格點，則自動出場。
+5. 尾盤出場：在交易時間結束之前，若仍有持倉，會自動強制清倉，這是為了避免留倉過夜，增加不可控風險。
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="日內交易策略",overlay=true)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//參數設定
+RSI_Length = input.int(14, minval=1, maxval=1000, step=2, title="RSI長度", group="RSI參數設定")
+RSI_Upper = input.int(70, minval=0, maxval=100, step=5, title="RSI上軌", group="RSI參數設定")
+RSI_Lower = input.int(30, minval=0, maxval=100, step=5, title="RSI下軌", group="RSI參數設定")
+Source = input.source(close,title="取樣價格")
+RSI = ta.rsi(Source,RSI_Length)
+
+timestamp()
+
+//出場參數
+SL = input.float(5.0, "停損百分比")  
+TP = input.float(5.0, "停利百分比") 
+
+//多頭停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+//濾網計算
+TimeRange = input.session("0900-1700", "交易時間限制")
+
+//t=當前圖表的時間框架，0900-1700的區間
+t = time(timeframe.period, TimeRange)
+
+var Timefilter = false
+
+//如果當前圖表的時間框架在區間內，濾網打開，否則關閉
+if time==t
+    Timefilter := true
+else
+    Timefilter := false
+
+//進場條件
+longCondition = ta.crossover(RSI,RSI_Upper)
+ShortCondition = ta.crossunder(RSI,RSI_Lower)
+
+// 多單委託
+if longCondition and Timefilter
+    strategy.entry("LE", strategy.long)
+
+// 空單委託
+if ShortCondition and Timefilter
+    strategy.entry("SE", strategy.short) 
+
+if strategy.position_size > 0
+    strategy.exit("LX","LE",limit=Long_TP_Price,stop=Long_SL_Price)
+
+//日內出場
+if Timefilter == true
+
+    if strategy.position_size > 0
+        strategy.exit("LX","LE",limit=Long_TP_Price,stop=Long_SL_Price)
+
+    if strategy.position_size < 0
+        strategy.exit("SX","SE", limit=Short_TP_Price, stop=Short_SL_Price)
+
+else if Timefilter == false
+    strategy.close_all("尾盤出場")
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//RSI線條變色
+rsiColor = RSI>=RSI_Upper ? color.red :
+ RSI<=RSI_Lower ? color.green : color.blue
+
+//繪圖
+plot(RSI, "RSI", color=rsiColor, linewidth=2)
+Upper = hline(RSI_Upper, "RSI上軌", color=color.gray)
+Lower = hline(RSI_Lower, "RSI下軌", color=color.gray)
+RSI_100 = hline(100, "RSI_100", color=color.gray,linestyle=hline.style_solid)
+RSI_50 = hline(50, "RSI_50", color=color.new(color.gray, 50))
+RSI_0 = hline(0, "RSI_0", color=color.gray,linestyle=hline.style_solid)
+
+//填充
+fill(Upper, RSI_100, color=color.new(color.red,90), title="超買區")
+fill(RSI_0, Lower, color=color.new(color.green,90), title="超賣區")

@@ -4,8 +4,8 @@ LongCondition =
 ShortCondition = 
 
 //出場條件
-longExit = 
-shortExit = 
+LongExit = 
+ShortExit = 
 
 // 多單委託
 if longCondition 

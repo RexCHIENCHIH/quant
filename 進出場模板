@@ -27,10 +27,17 @@ if LongCondition
 
 //多單出場
 if strategy.position_size > 0 
-    strategy.exit("LX","LE", stop=PB_Price)
+    strategy.exit("Long_TP/SL","LE",limit=Long_TP_Price,stop=Long_SL_Price,
+     comment_profit="Long_TP",comment_loss="Long_SL")
 
+//空單進場
+if Short_Entry
+    strategy.entry("SE",strategy.short)
 
-
+//空單出場
+if strategy.position_size<0
+    strategy.exit("Short_TP/SL","SE",limit=Short_TP_Price,stop=Short_SL_Price,
+     comment_profit="Short_TP",comment_loss="Short_SL")
 
 
 

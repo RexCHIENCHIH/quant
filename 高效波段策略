@@ -15,7 +15,7 @@ Bars_SinceEntry = bar_index -
 Length = input.int(20, "K棒長度計算")
 
 //進場的效率閾值
-Eff = input.float(0.5, "效率閥值") 
+Eff = input.float(0.5, "效率閥值",maxval=1) 
 
 //每根K棒之間的距離，取絕對值
 Single_Distance = math.abs(close - close[1]) 
@@ -62,6 +62,6 @@ colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
 bgcolor(colorBG, force_overlay=true)
 
 plot(Efficiency) // 畫出效率指標
-hline(0.5)
-hline(-0.5)
+hline(Eff)
+hline(-Eff)
 hline(0)

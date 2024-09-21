@@ -1,4 +1,15 @@
 
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//進場後經過了幾根K棒
+Bars_SinceEntry = bar_index - 
+ strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
+
+
 //進場條件
 LongCondition = 
 ShortCondition = 

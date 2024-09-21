@@ -22,7 +22,7 @@ if shortExit and strategy.position_size < 0
 /////////////////////////////////////////////////////////////////////
 
 //多單進場
-if LongCondition and strategy.position_size<=0
+if LongCondition 
     strategy.entry("LE", strategy.long)
 
 //多單出場

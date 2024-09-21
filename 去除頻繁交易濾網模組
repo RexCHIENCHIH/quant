@@ -1,0 +1,86 @@
+
+1. 通過限制一定區間內的交易次數，可以減少成本浪費。
+2. 計算區間：例如200根K棒作為一個區間，用來計算該區間內的交易次數。
+3. 交易次數：區間內最多允許發生3次交易，如果已達到交易次數上限，則不允許新的進場。
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+//@version=5
+strategy(title="去除頻繁交易濾網模組",overlay=false)
+
+//每次收K都清空委託單
+strategy.cancel_all()
+
+//未平倉的進場價
+Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
+
+//出場參數
+SL = input.float(10.0, "停損百分比")  
+TP = input.float(10.0, "停利百分比") 
+
+//停利停損
+Long_SL_Price = Entry_Price * (1 - SL * 0.01)
+Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
+Short_SL_Price = Entry_Price * (1 + SL * 0.01)
+Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
+
+///均線參數
+Small_Length = 20//input.int(20, "短均線的長度")
+Big_Length = 50//input.int(50, "長均線的長度")
+Source = input.source(close,"取樣價格")
+
+//計算短均線與長均線
+SmallMA = ta.sma(Source, Small_Length)
+BigMA = ta.sma(Source, Big_Length)
+
+//濾網計算
+Range_KBar = input.int(200, "計算交易次數的區間K棒數")
+Trade_In_Range = input.int(3, "區間內最大的交易次數")
+
+//獲取最近3次交易的進場K棒索引
+Limit_Trade_BarIndex = strategy.closedtrades.entry_bar_index(strategy.closedtrades - Trade_In_Range) 
+
+var longFilter = false
+
+//如果歷史交易次數小於3次，允許進場
+if strategy.closedtrades <= Trade_In_Range
+    longFilter := true 
+
+//如果當前K棒與第3次最近的交易K棒之間的差大於200，允許進場
+else if bar_index - Limit_Trade_BarIndex >= Range_KBar
+    longFilter := true 
+
+//如果當前K棒與第3次最近的交易K棒之間的差小於200，不進場
+else if bar_index - Limit_Trade_BarIndex < Range_KBar
+    longFilter := false 
+
+//進場
+LongCondition = SmallMA > BigMA
+
+//多單進場
+if LongCondition and longFilter
+    strategy.entry("LE", strategy.long)
+
+//多單出場
+if strategy.position_size > 0 
+    strategy.exit("LX","LE", limit = Long_TP_Price,
+     stop=Long_SL_Price,comment_profit = "LongTP",comment_loss = "LongSL")
+     
+
+//背景顏色，多頭綠色，空頭紅色，空手灰色
+colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
+           strategy.position_size < 0 ? color.new(color.red, 80) :
+           color.new(color.gray, 100)
+
+//force_overlay：呈現在主圖
+bgcolor(colorBG, force_overlay=true)
+
+//均線繪圖
+plot(SmallMA, "SmallMA", color.yellow, force_overlay=true) 
+plot(BigMA, "BigMA", color.blue, force_overlay=true) 
+
+//當前K棒距離前面第三根已平倉的進場K棒編號，距離多少根K棒
+plot(bar_index - Limit_Trade_BarIndex, style=plot.style_histogram) 
+
+//繪製200K棒的水平線
+hline(Range_KBar, "RangeKBar", color=color.gray, linestyle=hline.style_solid) 

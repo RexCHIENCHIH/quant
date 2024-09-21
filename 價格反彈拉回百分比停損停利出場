@@ -1,7 +1,4 @@
 
-
-
-
 //@version=5
 strategy(title="價格反彈拉回百分比 停損停利出場",overlay=true,max_bars_back=300)
 
@@ -29,8 +26,8 @@ TP_Start = input.float(10.00,"獲利超過N%啟動")
 PB_Percent = input.float(50.00,"拉回%")       
 
 //出場參數
-SL = input.float(5.0, "停損百分比")  
-TP = input.float(5.0, "停利百分比") 
+SL = input.float(10.0, "停損百分比")  
+TP = input.float(10.0, "停利百分比") 
 
 //停利停損
 Long_SL_Price = Entry_Price * (1 - SL * 0.01)
@@ -41,92 +38,72 @@ Short_TP_Price = Entry_Price * (1 - TP * 0.01)
 //進場
 LongCondition = ta.crossover(SmallMA, BigMA)
 
-//出場條件執行
-
 //計算進場後經歷過了幾根K棒
 var Count_Bars_SinceEntry = 0
 
-//有進場代表部位有變動，現在的部位和上一根K棒部位不一樣，且現在部位不是0
-//可能上一根K棒是空手，這一根K棒進場
-//若部位有變動，但變成0，代表的含意是出場而非進場，因為是要算進場後經過幾根K棒
 if strategy.position_size != strategy.position_size[1] and 
  strategy.position_size != 0
-
-    //從1開始計算
     Count_Bars_SinceEntry := 1
 
-//持有部位，但部位沒有變動，代表說又經過一根K棒
-//因此Coun_Bars_SinceEntry要+1
-else if strategy.position_size != 0
+else if strategy.position_size != 0 and 
+     strategy.position_size == strategy.position_size[1]
     Count_Bars_SinceEntry := Count_Bars_SinceEntry + 1
 
-//現在部位是0，代表空手沒有進場，進場後經過了幾根K棒這個前提就不存在
 else if strategy.position_size == 0
     Count_Bars_SinceEntry := 0
 
-//一段時間內的最高價，這段時間就是進場後經過了幾根K棒的最高點
-//math.max目的是要除錯，因為Count_Bars_SinceEntry可能為0
-//取0根最低價會出錯，因此至少取一根
 HH = ta.highest(high,math.max(Count_Bars_SinceEntry,1))
-
-//一段時間內的最低價，這段時間就是進場後經過了幾根K棒的最低點
-//math.max目的是要除錯，因為Count_Bars_SinceEntry可能為0
-//取0根最低價會出錯，因此至少取一根
 LL = ta.lowest(low,math.max(Count_Bars_SinceEntry,1))
 
-//但最高最低價不是隨時都可以用，因為可能會在Count_Bars_SinceEntry為0時做運算
-//當Count_Bars_SinceEntry != 0 時，計算出最高價和最低價，賦值給這兩個變數
 var High_SinceEntry = 0.00
 var Low_SinceEntry = 0.00
 
 if Count_Bars_SinceEntry > 0  
 
-    //進場之後的最高點，就可以算出從最高點拉回多少點
     High_SinceEntry := HH
-    //進場之後的最低點，就可以算出從最低點彈回多少點
     Low_SinceEntry := LL
 
-//拉回價格、拉/彈回條件啟動
+else 
+    High_SinceEntry := 0.00
+    Low_SinceEntry := 0.00
+
+//價格拉回、彈回條件啟動
 var PB_Price = 0.00
 var Over_Profit = false
 
-//場上持有多單，且漲超過未平倉進場價格的10%，拉回條件啟動
-if strategy.position_size > 0 and 
-     (High_SinceEntry - Entry_Price) / Entry_Price > TP_Start * 0.01    
-
+if strategy.position_size > 0 and
+     ( High_SinceEntry - Entry_Price ) / Entry_Price > TP_Start*0.01
     Over_Profit := true
 
-//場上持有空單，且跌超過未平倉進場價格的10%，彈回條件啟動
-else if strategy.position_size < 0 and 
-     (Low_SinceEntry - Entry_Price) / Entry_Price < TP_Start * 0.01
-    
+else if strategy.position_size < 0 and
+     ( Low_SinceEntry - Entry_Price ) / Entry_Price < TP_Start*0.01
     Over_Profit := true
 
-//多頭部位，且拉回條件啟動
-//拉回價格：最高價 - (最高價-進場價)*拉回百分比 
+else if  strategy.position_size == 0
+    Over_Profit := false    
+    PB_Price := 0.00  
+
 if strategy.position_size > 0 and Over_Profit == true
-    PB_Price := High_SinceEntry - ((High_SinceEntry-Entry_Price)*PB_Percent*0.01)
+    PB_Price := High_SinceEntry - ( High_SinceEntry - Entry_Price )*PB_Percent*0.01
 
-//空頭部位，且彈回條件啟動
-//彈回價格：最低價 + (進場價-最低價)*彈回百分比 
 else if strategy.position_size < 0 and Over_Profit == true
-    PB_Price := Low_SinceEntry + ((Entry_Price-Low_SinceEntry)*PB_Percent*0.01)
+    PB_Price := Low_SinceEntry + ( Entry_Price - Low_SinceEntry )*PB_Percent*0.01
 
 else if Over_Profit == false
+
     if strategy.position_size > 0
         PB_Price := Long_SL_Price
-    
-    else if strategy.position_size < 0
-        PB_Price := Short_TP_Price
 
+    else if strategy.position_size < 0
+        PB_Price := Short_SL_Price
 
 //多單進場
 if LongCondition
     strategy.entry("LE", strategy.long)
 
 //多單出場
-if strategy.position_size > 0 and Over_Profit==true
-    strategy.exit("LX_拉回出場","LE", stop=PB_Price)
+if strategy.position_size > 0 
+    strategy.exit("LX","LE", stop=PB_Price)
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
@@ -138,147 +115,4 @@ bgcolor(colorBG, force_overlay=true)
 
 plot(SmallMA,"SmallMA",color.yellow)
 plot(BigMA,"BigMA",color.blue)
-//plot(PB_Price[1]>0 ? PB_Price[1] : na,"PBPrice",color.red, style = plot.style_stepline
-
-===================================================================
-
-
-
-
-//@version=5
-strategy(title="價格反彈拉回百分比 停損停利出場",overlay=true,max_bars_back=300)
-
-//每次收K都清空委託單
-strategy.cancel_all()
-
-//未平倉的進場價
-Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
-
-//進場後經過了幾根K棒
-Bars_SinceEntry = bar_index - 
- strategy.opentrades.entry_bar_index(strategy.opentrades - 1)
-
-///均線參數
-Small_Length = 20//input.int(20, "短均線的長度")
-Big_Length = 50//input.int(50, "長均線的長度")
-Source = input.source(close,"取樣價格")
-
-//計算短均線與長均線
-SmallMA = ta.sma(Source, Small_Length)
-BigMA = ta.sma(Source, Big_Length)
-
-// 設定拉回的條件
-TP_Start = input.float(10.00,"獲利超過N%啟動") 
-PB_Percent = input.float(50.00,"拉回%")       
-
-//出場參數
-SL = input.float(5.0, "停損百分比")  
-TP = input.float(5.0, "停利百分比") 
-
-//停利停損
-Long_SL_Price = Entry_Price * (1 - SL * 0.01)
-Long_TP_Price = Entry_Price * (1 + TP * 0.01)  
-Short_SL_Price = Entry_Price * (1 + SL * 0.01)
-Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
-
-//進場
-LongCondition = ta.crossover(SmallMA, BigMA)
-
-//出場條件執行
-
-//計算進場後經歷過了幾根K棒
-var Count_Bars_SinceEntry = 0
-
-//有進場代表部位有變動，現在的部位和上一根K棒部位不一樣，且現在部位不是0
-//可能上一根K棒是空手，這一根K棒進場
-//若部位有變動，但變成0，代表的含意是出場而非進場，因為是要算進場後經過幾根K棒
-if strategy.position_size != strategy.position_size[1] and 
- strategy.position_size != 0
-
-    //從1開始計算
-    Count_Bars_SinceEntry := 1
-
-//持有部位，但部位沒有變動，代表說又經過一根K棒
-//因此Coun_Bars_SinceEntry要+1
-else if strategy.position_size != 0
-    Count_Bars_SinceEntry := Count_Bars_SinceEntry + 1
-
-//現在部位是0，代表空手沒有進場，進場後經過了幾根K棒這個前提就不存在
-else if strategy.position_size == 0
-    Count_Bars_SinceEntry := 0
-
-//一段時間內的最高價，這段時間就是進場後經過了幾根K棒的最高點
-//math.max目的是要除錯，因為Count_Bars_SinceEntry可能為0
-//取0根最低價會出錯，因此至少取一根
-HH = ta.highest(high,math.max(Count_Bars_SinceEntry,1))
-
-//一段時間內的最低價，這段時間就是進場後經過了幾根K棒的最低點
-//math.max目的是要除錯，因為Count_Bars_SinceEntry可能為0
-//取0根最低價會出錯，因此至少取一根
-LL = ta.lowest(low,math.max(Count_Bars_SinceEntry,1))
-
-//但最高最低價不是隨時都可以用，因為可能會在Count_Bars_SinceEntry為0時做運算
-//當Count_Bars_SinceEntry != 0 時，計算出最高價和最低價，賦值給這兩個變數
-var High_SinceEntry = 0.00
-var Low_SinceEntry = 0.00
-
-if Count_Bars_SinceEntry > 0  
-
-    //進場之後的最高點，就可以算出從最高點拉回多少點
-    High_SinceEntry := HH
-    //進場之後的最低點，就可以算出從最低點彈回多少點
-    Low_SinceEntry := LL
-
-//拉回價格、拉/彈回條件啟動
-var PB_Price = 0.00
-var Over_Profit = false
-
-//場上持有多單，且漲超過未平倉進場價格的10%，拉回條件啟動
-if strategy.position_size > 0 and 
-     (High_SinceEntry - Entry_Price) / Entry_Price > TP_Start * 0.01    
-
-    Over_Profit := true
-
-//場上持有空單，且跌超過未平倉進場價格的10%，彈回條件啟動
-else if strategy.position_size < 0 and 
-     (Low_SinceEntry - Entry_Price) / Entry_Price < TP_Start * 0.01
-    
-    Over_Profit := true
-
-//多頭部位，且拉回條件啟動
-//拉回價格：最高價 - (最高價-進場價)*拉回百分比 
-if strategy.position_size > 0 and Over_Profit == true
-    PB_Price := High_SinceEntry - ((High_SinceEntry-Entry_Price)*PB_Percent*0.01)
-
-//空頭部位，且彈回條件啟動
-//彈回價格：最低價 + (進場價-最低價)*彈回百分比 
-else if strategy.position_size < 0 and Over_Profit == true
-    PB_Price := Low_SinceEntry + ((Entry_Price-Low_SinceEntry)*PB_Percent*0.01)
-
-else if Over_Profit == false
-    if strategy.position_size > 0
-        PB_Price := Long_SL_Price
-    
-    else if strategy.position_size < 0
-        PB_Price := Short_TP_Price
-
-
-//多單進場
-if LongCondition
-    strategy.entry("LE", strategy.long)
-
-//多單出場
-if strategy.position_size > 0 and Over_Profit==true
-    strategy.exit("LX_拉回出場","LE", stop=PB_Price)
-
-//背景顏色，多頭綠色，空頭紅色，空手灰色
-colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
-           strategy.position_size < 0 ? color.new(color.red, 80) :
-           color.new(color.gray, 100)
-
-//force_overlay：呈現在主圖
-bgcolor(colorBG, force_overlay=true)
-
-plot(SmallMA,"SmallMA",color.yellow)
-plot(BigMA,"BigMA",color.blue)
-//plot(PB_Price[1]>0 ? PB_Price[1] : na,"PBPrice",color.red, style = plot.style_stepline
+plot(PB_Price[1]>0 ? PB_Price[1] : na,"PBPrice",color.red, style = plot.style_stepline)

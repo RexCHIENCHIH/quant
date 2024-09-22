@@ -33,9 +33,6 @@ Long_TP_Price = Entry_Price * (1 + TP * 0.01)
 Short_SL_Price = Entry_Price * (1 + SL * 0.01)
 Short_TP_Price = Entry_Price * (1 - TP * 0.01)  
 
-//濾網計算
-Length = input.int(100, "高低檔判斷長度")
-
 //進場條件
 
 //open[1] > close[1]，前一根K棒收『綠K』，且『跌幅』達預設3%

@@ -20,7 +20,7 @@ strategy.cancel_all()
 Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 
 //指標計算
-Reverse = input.float(3, minval=0.01, title="反轉%")
+Reverse = input.float(0.2, minval=0.01, title="反轉%")
 reverse_percent = Reverse*0.01
 
 //出場參數

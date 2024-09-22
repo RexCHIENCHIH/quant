@@ -104,7 +104,7 @@ strategy.cancel_all()
 //未平倉的進場價
 Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1) 
 
-//預設Data1為台指期 TXF! 60M , Data2為加權指數
+//比較商品
 Data2 = input.symbol("pepperstone:BTCUSD","Data2商品")
 Data2_timeframe = input.timeframe("60","Data2時間週期")
 Data2_close = request.security(Data2,Data2_timeframe,close)

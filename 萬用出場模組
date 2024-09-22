@@ -29,6 +29,8 @@ Source = input.source(close,title="取樣價格")
 L1 = ta.sma(Source, Small_Length)
 L2 = ta.sma(Source, Big_Length)
 
+////////////////////////////////////////////////////////////////////////////
+
 //出場參數
 SL = input.float(5.0, "停損百分比")  
 TP1 = input.float(5.0, "第一目標止盈百分比") 
@@ -37,16 +39,15 @@ TP2 = input.float(10.0, "第二目標止盈百分比")
 //K棒數設定出場的時間條件，交易達到多少根K棒後將根據時間出場 
 Time_Out_Kbars = input.int(20, "時間出場K棒數")
 
-//多頭停利停損
+//停利停損
 
-Long_SL_Price = Entry_Price * (1 - SL * 0.01)  // 多頭止損價
-Long_SL_Price_lowest = ta.lowest(low, Time_Out_Kbars)
+Long_SL_Price = Entry_Price * (1 - SL * 0.01) 
+Long_TP1_Price = Entry_Price * (1 + TP1 * 0.01)  
+Long_TP2_Price = Entry_Price * (1 + TP2 * 0.01)  
 
-Long_TP1_Price = Entry_Price * (1 + TP1 * 0.01)  // TP1停利價
-Long_TP1_Price_lowest = ta.lowest(low, Time_Out_Kbars / 2)
-
-Long_TP2_Price = Entry_Price * (1 + TP2 * 0.01)  // TP2停利價
-Long_TP2_Price_lowest = ta.lowest(low, Time_Out_Kbars / 4)
+Short_SL_Price = Entry_Price * (1 + SL * 0.01) 
+Short_TP1_Price = Entry_Price * (1 - TP1 * 0.01)
+Short_TP2_Price = Entry_Price * (1 - TP2 * 0.01)
 
 //進場條件
 longCondition1 = ta.crossover(L1, L2)
@@ -59,16 +60,18 @@ if longCondition1
 
 var OutPrice = 0.00
 
+////////////////////////////////////////////////////////////////////////////
+
 //如果持有多單，且收盤價 >= TP2停利價(預設10%)
 //出場價格為：TP2停利價(預設10%) 和 Time_Out_Kbars(時間出場K棒數，預設為20根)/4 根的最低價(5根)，取其大值出場。
 if strategy.position_size > 0 and close >= Long_TP2_Price
-    OutPrice := math.max(Long_TP2_Price, Long_TP2_Price_lowest)  
+    OutPrice := math.max(Long_TP2_Price, ta.lowest(low, Time_Out_Kbars / 4))  
     strategy.exit("LX_TP2", stop=OutPrice, comment="LX_止盈2")
 
 //如果持有多單，且收盤價 >= TP1停利價(預設5%)
 //出場價格為：TP1停利價(預設5%) 和 Time_Out_Kbars(時間出場K棒數，預設為20根)/2 根的最低價(10根)，取其大值出場。
 else if strategy.position_size > 0 and close >= Long_TP1_Price
-    OutPrice := math.max(Long_TP1_Price, Long_TP1_Price_lowest)  
+    OutPrice := math.max(Long_TP1_Price, ta.lowest(low, Time_Out_Kbars / 2))  
     strategy.exit("LX_TP1", stop=OutPrice, comment="LX_止盈1")  
 
 //如果持有多單，且收盤價 < TP1停利價(預設5%) 且進場後經過的K棒數 <= Time_Out_Kbars(時間出場K棒數，預設為20根)
@@ -80,7 +83,7 @@ else if strategy.position_size > 0 and close < Long_TP1_Price and Bars_Since_Ent
 //如果持有多單，且進場後經過的K棒數 > Time_Out_Kbars(時間出場K棒數，預設為20根)，且場上所有多單加總後為浮盈
 //出場價格為：多頭止損價 和 Time_Out_Kbars(時間出場K棒數，預設為20根)的最低價，取其大值出場
 else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and strategy.openprofit >= 0
-    OutPrice := math.max(Long_SL_Price,Long_SL_Price_lowest)  
+    OutPrice := math.max(Long_SL_Price,ta.lowest(low, Time_Out_Kbars))  
     strategy.exit("LX_Time", stop=OutPrice, comment="LX_時間")  
 
 //如果持有多單，且進場後經過的K棒數 > Time_Out_Kbars(時間出場K棒數，預設為20根)，且場上所有多單加總後為浮虧
@@ -90,6 +93,34 @@ else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and
     OutPrice := low  
     strategy.exit("LX_-Time", stop=OutPrice, comment="LX_時間損")  
 
+////////////////////////////////////////////////////////////////////////////
+
+// 空單進出場
+if ShortEntry 
+    strategy.entry("SE", strategy.short) 
+
+if strategy.position_size < 0 and close <= Short_TP2_Price
+    OutPrice := math.max(Short_TP2_Price, ta.highest(high, Time_Out_Kbars / 4))  
+    strategy.exit("SX_TP2", stop=OutPrice, comment="SX_止盈2")
+
+else if strategy.position_size < 0 and close <= Short_TP1_Price
+    OutPrice := math.max(Short_TP1_Price, ta.highest(high, Time_Out_Kbars / 2))  
+    strategy.exit("SX_TP1", stop=OutPrice, comment="SX_止盈1")  
+
+else if strategy.position_size < 0 and close < Short_TP1_Price and Bars_SinceEntry <= Time_Out_Kbars
+    OutPrice := Short_SL_Price  
+    strategy.exit("SX_SL", stop=OutPrice, comment="SX_止損")  
+
+else if strategy.position_size < 0 and Bars_SinceEntry > Time_Out_Kbars and strategy.openprofit >= 0
+    OutPrice := math.max(Short_SL_Price,ta.highest(high, Time_Out_Kbars))  
+    strategy.exit("SX_Time", stop=OutPrice, comment="SX_時間")  
+
+else if strategy.position_size < 0 and Bars_SinceEntry > Time_Out_Kbars and
+     strategy.openprofit < 0
+    OutPrice := high  
+    strategy.exit("SX_-Time", stop=OutPrice, comment="SX_時間損")  
+
+////////////////////////////////////////////////////////////////////////////
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :

@@ -52,46 +52,35 @@ Short_TP2_Price = Entry_Price * (1 - TP2 * 0.01)
 //進場條件
 longCondition1 = ta.crossover(L1, L2)
 
-//進場
-if longCondition1
+// 多單進出場
+if LongEntry 
     strategy.entry("LE", strategy.long)
 
-//多單出場：止損 / 止盈 / 時間
+var Long_OutPrice = 0.00
 
-var OutPrice = 0.00
-
-////////////////////////////////////////////////////////////////////////////
-
-//如果持有多單，且收盤價 >= TP2停利價(預設10%)
-//出場價格為：TP2停利價(預設10%) 和 Time_Out_Kbars(時間出場K棒數，預設為20根)/4 根的最低價(5根)，取其大值出場。
 if strategy.position_size > 0 and close >= Long_TP2_Price
-    OutPrice := math.max(Long_TP2_Price, ta.lowest(low, Time_Out_Kbars / 4))  
-    strategy.exit("LX_TP2", stop=OutPrice, comment="LX_止盈2")
+    Long_OutPrice := math.max(Long_TP2_Price, ta.lowest(low, Time_Out_Kbars / 4))  
+    strategy.exit("LX_TP2", stop=Long_OutPrice, comment="LX_止盈2")
 
-//如果持有多單，且收盤價 >= TP1停利價(預設5%)
-//出場價格為：TP1停利價(預設5%) 和 Time_Out_Kbars(時間出場K棒數，預設為20根)/2 根的最低價(10根)，取其大值出場。
 else if strategy.position_size > 0 and close >= Long_TP1_Price
-    OutPrice := math.max(Long_TP1_Price, ta.lowest(low, Time_Out_Kbars / 2))  
-    strategy.exit("LX_TP1", stop=OutPrice, comment="LX_止盈1")  
+    Long_OutPrice := math.max(Long_TP1_Price, ta.lowest(low, Time_Out_Kbars / 2))  
+    strategy.exit("LX_TP1", stop=Long_OutPrice, comment="LX_止盈1")  
 
-//如果持有多單，且收盤價 < TP1停利價(預設5%) 且進場後經過的K棒數 <= Time_Out_Kbars(時間出場K棒數，預設為20根)
-//出場價格為：多頭止損價
-else if strategy.position_size > 0 and close < Long_TP1_Price and Bars_Since_Entry <= Time_Out_Kbars
-    OutPrice := Long_SL_Price  
-    strategy.exit("LX_SL", stop=OutPrice, comment="LX_止損")  
+else if strategy.position_size > 0 and close < Long_TP1_Price and Bars_SinceEntry <= Time_Out_Kbars
+    Long_OutPrice := Long_SL_Price  
+    strategy.exit("LX_SL", stop=Long_OutPrice, comment="LX_止損")  
 
-//如果持有多單，且進場後經過的K棒數 > Time_Out_Kbars(時間出場K棒數，預設為20根)，且場上所有多單加總後為浮盈
-//出場價格為：多頭止損價 和 Time_Out_Kbars(時間出場K棒數，預設為20根)的最低價，取其大值出場
-else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and strategy.openprofit >= 0
-    OutPrice := math.max(Long_SL_Price,ta.lowest(low, Time_Out_Kbars))  
-    strategy.exit("LX_Time", stop=OutPrice, comment="LX_時間")  
+else if strategy.position_size > 0 and Bars_SinceEntry > Time_Out_Kbars and strategy.openprofit >= 0
+    Long_OutPrice := math.max(Long_SL_Price,ta.lowest(low, Time_Out_Kbars))  
+    strategy.exit("LX_Time", stop=Long_OutPrice, comment="LX_時間")  
 
-//如果持有多單，且進場後經過的K棒數 > Time_Out_Kbars(時間出場K棒數，預設為20根)，且場上所有多單加總後為浮虧
-//出場價格為：當根K棒最低價
-else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and
+else if strategy.position_size > 0 and Bars_SinceEntry > Time_Out_Kbars and
      strategy.openprofit < 0
-    OutPrice := low  
-    strategy.exit("LX_-Time", stop=OutPrice, comment="LX_時間損")  
+    Long_OutPrice := low  
+    strategy.exit("LX_-Time", stop=Long_OutPrice, comment="LX_時間損")  
+
+else if ta.crossunder(L1,L2)
+    strategy.close("LE","LX_死叉")
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -99,26 +88,31 @@ else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and
 if ShortEntry 
     strategy.entry("SE", strategy.short) 
 
+var Short_OutPrice = 0.00
+
 if strategy.position_size < 0 and close <= Short_TP2_Price
-    OutPrice := math.max(Short_TP2_Price, ta.highest(high, Time_Out_Kbars / 4))  
-    strategy.exit("SX_TP2", stop=OutPrice, comment="SX_止盈2")
+    Short_OutPrice := math.max(Short_TP2_Price, ta.highest(high, Time_Out_Kbars / 4))  
+    strategy.exit("SX_TP2", stop=Short_OutPrice, comment="SX_止盈2")
 
 else if strategy.position_size < 0 and close <= Short_TP1_Price
-    OutPrice := math.max(Short_TP1_Price, ta.highest(high, Time_Out_Kbars / 2))  
-    strategy.exit("SX_TP1", stop=OutPrice, comment="SX_止盈1")  
+    Short_OutPrice := math.max(Short_TP1_Price, ta.highest(high, Time_Out_Kbars / 2))  
+    strategy.exit("SX_TP1", stop=Short_OutPrice, comment="SX_止盈1")  
 
 else if strategy.position_size < 0 and close < Short_TP1_Price and Bars_SinceEntry <= Time_Out_Kbars
-    OutPrice := Short_SL_Price  
-    strategy.exit("SX_SL", stop=OutPrice, comment="SX_止損")  
+    Short_OutPrice := Short_SL_Price  
+    strategy.exit("SX_SL", stop=Short_OutPrice, comment="SX_止損")  
 
 else if strategy.position_size < 0 and Bars_SinceEntry > Time_Out_Kbars and strategy.openprofit >= 0
-    OutPrice := math.max(Short_SL_Price,ta.highest(high, Time_Out_Kbars))  
-    strategy.exit("SX_Time", stop=OutPrice, comment="SX_時間")  
+    Short_OutPrice := math.max(Short_SL_Price,ta.highest(high, Time_Out_Kbars))  
+    strategy.exit("SX_Time", stop=Short_OutPrice, comment="SX_時間")  
 
 else if strategy.position_size < 0 and Bars_SinceEntry > Time_Out_Kbars and
      strategy.openprofit < 0
-    OutPrice := high  
-    strategy.exit("SX_-Time", stop=OutPrice, comment="SX_時間損")  
+    Short_OutPrice := high  
+    strategy.exit("SX_-Time", stop=Short_OutPrice, comment="SX_時間損")  
+
+else if ta.crossover(L1,L2) 
+    strategy.close("SE","SX_金叉")
 
 ////////////////////////////////////////////////////////////////////////////
 

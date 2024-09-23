@@ -33,8 +33,7 @@ L2 = ta.sma(Source, Big_Length)
 
 //出場參數
 SL = input.float(5.0, "停損百分比")  
-TP1 = input.float(5.0, "第一目標止盈百分比") 
-TP2 = input.float(10.0, "第二目標止盈百分比") 
+TP = input.float(5.0, "停利百分比") 
 
 //K棒數設定出場的時間條件，交易達到多少根K棒後將根據時間出場 
 Time_Out_Kbars = input.int(20, "時間出場K棒數")
@@ -42,12 +41,12 @@ Time_Out_Kbars = input.int(20, "時間出場K棒數")
 //停利停損
 
 Long_SL_Price = Entry_Price * (1 - SL * 0.01) 
-Long_TP1_Price = Entry_Price * (1 + TP1 * 0.01)  
-Long_TP2_Price = Entry_Price * (1 + TP2 * 0.01)  
+Long_TP1_Price = Entry_Price * (1 + TP * 0.01)  
+Long_TP2_Price = Entry_Price * (1 + TP*2 * 0.01)  
 
 Short_SL_Price = Entry_Price * (1 + SL * 0.01) 
-Short_TP1_Price = Entry_Price * (1 - TP1 * 0.01)
-Short_TP2_Price = Entry_Price * (1 - TP2 * 0.01)
+Short_TP1_Price = Entry_Price * (1 - TP * 0.01)
+Short_TP2_Price = Entry_Price * (1 - TP*2 * 0.01)
 
 //進場條件
 longCondition1 = ta.crossover(L1, L2)

@@ -65,15 +65,15 @@ else if strategy.position_size > 0 and close >= Long_TP1_Price
     Long_OutPrice := math.max(Long_TP1_Price, ta.lowest(low, Time_Out_Kbars / 2))  
     strategy.exit("LX_TP1", stop=Long_OutPrice, comment="LX_止盈1")  
 
-else if strategy.position_size > 0 and close < Long_TP1_Price and Bars_SinceEntry <= Time_Out_Kbars
+else if strategy.position_size > 0 and close < Long_TP1_Price and Bars_Since_Entry <= Time_Out_Kbars
     Long_OutPrice := Long_SL_Price  
     strategy.exit("LX_SL", stop=Long_OutPrice, comment="LX_止損")  
 
-else if strategy.position_size > 0 and Bars_SinceEntry > Time_Out_Kbars and strategy.openprofit >= 0
+else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and strategy.openprofit >= 0
     Long_OutPrice := math.max(Long_SL_Price,ta.lowest(low, Time_Out_Kbars))  
     strategy.exit("LX_Time", stop=Long_OutPrice, comment="LX_時間")  
 
-else if strategy.position_size > 0 and Bars_SinceEntry > Time_Out_Kbars and
+else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and
      strategy.openprofit < 0
     Long_OutPrice := low  
     strategy.exit("LX_-Time", stop=Long_OutPrice, comment="LX_時間損")  
@@ -97,15 +97,15 @@ else if strategy.position_size < 0 and close <= Short_TP1_Price
     Short_OutPrice := math.max(Short_TP1_Price, ta.highest(high, Time_Out_Kbars / 2))  
     strategy.exit("SX_TP1", stop=Short_OutPrice, comment="SX_止盈1")  
 
-else if strategy.position_size < 0 and close < Short_TP1_Price and Bars_SinceEntry <= Time_Out_Kbars
+else if strategy.position_size < 0 and close < Short_TP1_Price and Bars_Since_Entry <= Time_Out_Kbars
     Short_OutPrice := Short_SL_Price  
     strategy.exit("SX_SL", stop=Short_OutPrice, comment="SX_止損")  
 
-else if strategy.position_size < 0 and Bars_SinceEntry > Time_Out_Kbars and strategy.openprofit >= 0
+else if strategy.position_size < 0 and Bars_Since_Entry > Time_Out_Kbars and strategy.openprofit >= 0
     Short_OutPrice := math.max(Short_SL_Price,ta.highest(high, Time_Out_Kbars))  
     strategy.exit("SX_Time", stop=Short_OutPrice, comment="SX_時間")  
 
-else if strategy.position_size < 0 and Bars_SinceEntry > Time_Out_Kbars and
+else if strategy.position_size < 0 and Bars_Since_Entry > Time_Out_Kbars and
      strategy.openprofit < 0
     Short_OutPrice := high  
     strategy.exit("SX_-Time", stop=Short_OutPrice, comment="SX_時間損")  

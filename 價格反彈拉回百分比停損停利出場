@@ -76,7 +76,7 @@ if strategy.position_size > 0 and
     Over_Profit := true
 
 else if strategy.position_size < 0 and
-     ( Low_SinceEntry - Entry_Price ) / Entry_Price < TP_Start*0.01
+     ( Low_SinceEntry - Entry_Price ) / Entry_Price < -TP_Start*0.01
     Over_Profit := true
 
 else if  strategy.position_size == 0

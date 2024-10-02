@@ -38,6 +38,8 @@ Short_TP_Price = Entry_Price * (1 - TP * 0.01)
 //進場
 LongCondition = ta.crossover(SmallMA, BigMA)
 
+///////////////////////////////////////////////////////////////////////////////
+
 //計算進場後經歷過了幾根K棒
 var Count_Bars_SinceEntry = 0
 
@@ -63,47 +65,77 @@ if Count_Bars_SinceEntry > 0
     High_SinceEntry := HH
     Low_SinceEntry := LL
 
-else 
-    High_SinceEntry := 0.00
-    Low_SinceEntry := 0.00
+///////////////////////////////////////////////////////////////////////////////
 
 //價格拉回、彈回條件啟動
-var PB_Price = 0.00
-var Over_Profit = false
+var PB_Long_Price = 0.00
+var PB_Short_Price = 0.00
+var Long_Over_Profit = false
+var Short_Over_Profit = false
 
+//多頭部位且獲利超過10%，Over_Profit為真
 if strategy.position_size > 0 and
-     ( High_SinceEntry - Entry_Price ) / Entry_Price > TP_Start*0.01
-    Over_Profit := true
+     ( High_SinceEntry - Entry_Price ) / Entry_Price > SL*0.01
+    Long_Over_Profit := true
 
-else if strategy.position_size < 0 and
-     ( Low_SinceEntry - Entry_Price ) / Entry_Price < -TP_Start*0.01
-    Over_Profit := true
+if strategy.position_size < 0 and
+     ( Low_SinceEntry - Entry_Price ) / Entry_Price < -SL*0.01
+    Short_Over_Profit := true
 
-else if  strategy.position_size == 0
-    Over_Profit := false    
-    PB_Price := 0.00  
+//沒有持倉，Over_Profit為否
+if  strategy.position_size == 0
+    Long_Over_Profit := false 
+    Short_Over_Profit := false
 
-if strategy.position_size > 0 and Over_Profit == true
-    PB_Price := High_SinceEntry - ( High_SinceEntry - Entry_Price )*PB_Percent*0.01
+//多頭部位，且獲利超過10%，停損價為最高價 - ( 最高價 - 進場價 ) * 0.5
+//即獲利10%後，拉回到剩5%浮盈出場
+if strategy.position_size > 0 and Long_Over_Profit == true
+    PB_Long_Price := High_SinceEntry - ( High_SinceEntry - Entry_Price )
+     * SL * Mult_ceil * 0.01 //獲利超過TP_SL%數，拉回百分比啟動
 
-else if strategy.position_size < 0 and Over_Profit == true
-    PB_Price := Low_SinceEntry + ( Entry_Price - Low_SinceEntry )*PB_Percent*0.01
+if strategy.position_size < 0 and Short_Over_Profit == true
+    PB_Short_Price := Low_SinceEntry + ( Entry_Price - Low_SinceEntry )
+     * SL * Mult_ceil * 0.01
 
-else if Over_Profit == false
+//如果獲利未超過10%，但如果持有多單，拉回價格為進場價的10%停損
+if Long_Over_Profit == false
 
     if strategy.position_size > 0
-        PB_Price := Long_SL_Price
+        PB_Long_Price := Long_SL_Price
 
-    else if strategy.position_size < 0
-        PB_Price := Short_SL_Price
+if Short_Over_Profit == false
+    if strategy.position_size < 0
+        PB_Short_Price := Short_SL_Price  
 
-//多單進場
-if LongCondition and strategy.position_size<=0
+///////////////////////////////////////////////////////////////////////////////
+
+//進場條件
+LongEntry = dippp > dimmm and close > close[1] + Mult * ATR 
+             and ( dippp - dippp[1] ) > 0
+ShortEntry = dippp < dimmm and close < close[1] - Mult * ATR 
+             and ( dimmm - dimmm[1] ) < 0
+            
+//多單進出場
+if LongEntry 
     strategy.entry("LE", strategy.long)
 
-//多單出場
+if ta.crossunder(dippp,dimmm)
+    strategy.close("LE",comment="死叉")
+
 if strategy.position_size > 0 
-    strategy.exit("LX","LE", stop=PB_Price)
+    strategy.exit("LX","LE",stop = PB_Long_Price,comment="Long_PB")
+
+//空單進出場
+if ShortEntry 
+    strategy.entry("SE", strategy.short)
+
+if ta.crossover(dippp,dimmm)
+    strategy.close("SE",comment="金叉")
+
+if strategy.position_size < 0 
+    strategy.exit("SX","SE",stop = PB_Short_Price,comment="Short_PB")
+
+///////////////////////////////////////////////////////////////////////////////
 
 //背景顏色，多頭綠色，空頭紅色，空手灰色
 colorBG = strategy.position_size > 0 ? color.new(color.green, 80) :
@@ -116,3 +148,11 @@ bgcolor(colorBG, force_overlay=true)
 plot(SmallMA,"SmallMA",color.yellow)
 plot(BigMA,"BigMA",color.blue)
 plot(PB_Price[1]>0 ? PB_Price[1] : na,"PBPrice",color.red, style = plot.style_stepline)
+
+///////////////////////////////////////////////////////////////////////////////
+
+plot(PB_Long_Price>0 ? PB_Long_Price : na,"PB_Long_Price",color.red,
+ style = plot.style_stepline,force_overlay = true)
+
+plot(PB_Short_Price>0 ? PB_Short_Price : na,"PB_Short_Price",color.white,
+ style = plot.style_stepline,force_overlay = true)

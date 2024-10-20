@@ -106,8 +106,7 @@ Entry_Price = strategy.opentrades.entry_price(strategy.opentrades - 1)
 
 //比較商品
 Data2 = input.symbol("pepperstone:BTCUSD","Data2商品")
-Data2_timeframe = input.timeframe("60","Data2時間週期")
-Data2_close = request.security(Data2,Data2_timeframe,close)
+Data2_close = request.security(Data2,"",close)
 
 //相除價差取均線
 Length = input.int(20,"均線長度")

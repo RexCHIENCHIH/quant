@@ -81,6 +81,12 @@ else if strategy.position_size > 0 and Bars_Since_Entry > Time_Out_Kbars and
 else if ta.crossunder(L1,L2)
     strategy.close("LE","LX_死叉")
 
+else if Bars_Since_Entry > Length / 16 and strategy.openprofit < 0
+    strategy.close("LE","動態時間損")
+
+else if Bars_Since_First > Length / 8 and strategy.openprofit < 0
+    strategy.close("LE","時間損")
+
 ////////////////////////////////////////////////////////////////////////////
 
 // 空單進出場

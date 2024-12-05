@@ -87,6 +87,9 @@ else if Bars_Since_Entry > Length / 16 and strategy.openprofit < 0
 else if Bars_Since_First > Length / 8 and strategy.openprofit < 0
     strategy.close("LE","時間損")
 
+else 
+    Out_Price := na
+
 ////////////////////////////////////////////////////////////////////////////
 
 // 空單進出場
@@ -118,6 +121,9 @@ else if strategy.position_size < 0 and Bars_Since_Entry > Time_Out_Kbars and
 
 else if ta.crossover(L1,L2) 
     strategy.close("SE","SX_金叉")
+
+else 
+    Out_Price := na
 
 ////////////////////////////////////////////////////////////////////////////
 

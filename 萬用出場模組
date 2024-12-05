@@ -87,26 +87,6 @@ else if Bars_Since_Entry > Length / 16 and strategy.openprofit < 0
 else if Bars_Since_First > Length / 8 and strategy.openprofit < 0
     strategy.close("LE","時間損")
 
-if strategy.position_size > 0 
-     and Bars_Since_Entry > Fast_Length / log
-     and strategy.openprofit < 0
-    strategy.close("LE","時間動態損")
-
-if strategy.position_size > 0 
-     and Bars_Since_Entry > Fast_Length / log
-     and strategy.openprofit > 0
-    strategy.close("LE","時間動態盈")
-
-if strategy.position_size > 0 
-     and Bars_Since_First > Fast_Length / Fast_Length_D_sqrt
-     and strategy.openprofit > 0
-    strategy.close("LE","時間盈")
-
-if strategy.position_size > 0 
-     and Bars_Since_First > Fast_Length / Fast_Length_D_sqrt
-     and strategy.openprofit < 0
-    strategy.close("LE","時間損")
-
 ////////////////////////////////////////////////////////////////////////////
 
 // 空單進出場
